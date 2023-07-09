@@ -18,7 +18,7 @@
       <HintPath>..\..\Hardware\bin\Debug\net6.0-windows\Hardware.dll</HintPath>
     </Reference>
     <Reference Include="Sdk">
-      <HintPath>..\..\..\Telebot\Sdk\bin\Debug\net6.0-windows\Sdk.dll</HintPath>
+      <HintPath>..\..\Sdk\bin\Debug\net6.0-windows\Sdk.dll</HintPath>
     </Reference>
   </ItemGroup>
 

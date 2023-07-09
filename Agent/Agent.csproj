@@ -34,6 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Sdk\Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Hardware">
       <HintPath>..\Hardware\bin\Debug\net6.0-windows\Hardware.dll</HintPath>
     </Reference>
