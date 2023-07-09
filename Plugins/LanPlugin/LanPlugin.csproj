@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <BaseOutputPath>C:\Users\dahan\Documents\GitHub\Telebot\GUI\bin\Debug\Plugins\Lan</BaseOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <None Remove="bin\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="wnet.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="wnet.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Sdk\Sdk.csproj" />
+  </ItemGroup>
+
+</Project>

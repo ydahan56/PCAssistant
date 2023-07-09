@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <BaseOutputPath>C:\Users\dahan\Documents\GitHub\Telebot\GUI\bin\Debug\Plugins\Alert</BaseOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <None Remove="bin\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Sdk\Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

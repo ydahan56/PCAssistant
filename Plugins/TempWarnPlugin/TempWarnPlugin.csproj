@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <BaseOutputPath>C:\Users\dahan\Documents\GitHub\Telebot\GUI\bin\Debug\Plugins\TempWarn</BaseOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="2.3.0" />
+    <PackageReference Include="Easy.MessageHub" Version="5.0.0" />
+    <PackageReference Include="FluentScheduler" Version="5.5.1" />
+    <PackageReference Include="SimpleInjector" Version="5.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Components\Components.csproj" />
+    <ProjectReference Include="..\..\Sdk\Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update=".env">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

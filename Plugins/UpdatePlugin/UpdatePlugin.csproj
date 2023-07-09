@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+	<Nullable>enable</Nullable>
+    <BaseOutputPath>C:\Users\dahan\Documents\GitHub\Telebot\GUI\bin\Debug\Plugins\Update</BaseOutputPath>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autoupdater.NET.Official" Version="1.7.6" />
+    <PackageReference Include="FluentScheduler" Version="5.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Sdk\Sdk.csproj" />
+  </ItemGroup>
+
+</Project>

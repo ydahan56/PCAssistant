@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <BaseOutputPath>C:\Users\dahan\Documents\GitHub\Telebot\GUI\bin\Debug\Plugins\Dim</BaseOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Sdk\Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="System.Management.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="System.Management.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
