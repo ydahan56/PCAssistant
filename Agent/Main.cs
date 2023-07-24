@@ -3,6 +3,7 @@ using FluentScheduler;
 using Sdk.Clients;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
+using System.Reflection;
 
 namespace Agent
 {
@@ -10,23 +11,19 @@ namespace Agent
     {
         public Main(ITGBotClient client, CancellationTokenSource cts)
         {
+            // init tray
             var tray = new NotifyIcon()
             {
                 Icon = new Icon(".\\icon.ico"),
-                Text = "Telebot"
+                Text = "PCAssistant",
+                Visible = true
             };
-
-            // show tray icon
-            tray.Visible = true;
 
             // create an instace of init job
             var startup_Job = new Startup(client, cts, tray);
 
-            // init startup job
-            JobManager.Initialize(startup_Job);
-
-            // init refresh thread
-            JobManager.Initialize(Cpuid64.Instance);
+            // init startup and refresh job
+            JobManager.Initialize(startup_Job, Cpuid64.Instance);
         }
     }
 
@@ -50,13 +47,13 @@ namespace Agent
 
         private void StartEventListener()
         {
-            var updateHandler = new MainUpdateHandler(this.tray);
-            var recvOptions = new ReceiverOptions()
+            var update = new MainUpdateHandler(this.tray);
+            var options = new ReceiverOptions()
             {
                 AllowedUpdates = new UpdateType[] { UpdateType.Message }
             };
 
-            this._client.StartReceiving(updateHandler, recvOptions, this.cts);
+            this._client.StartReceiving(update, options, this.cts);
         }
 
         private void AddBotNicknameToTrayTitle()

@@ -1,27 +1,33 @@
-﻿using Sdk.Base;
+﻿using FluentScheduler;
+using New.Jobs;
+using Sdk.Base;
 using Sdk.Clients;
 using Sdk.Containers;
-using Sdk.Contracts;
 using Sdk.Models;
-using System.Text;
 
-namespace Plugins.Help
+namespace New
 {
     public class DllMain : PluginBase
     {
-        private string text;
         private ITGBotClient _client;
 
         public DllMain()
         {
-            this.Name = "/help";
+            this.Name = "/new";
             this.HasArguments = false;
-            this.Description = "List of available commands.";
+            this.Description = "Create a new instance of PCAssistant.";
         }
 
         public override void Dispatch()
         {
-            this._client.SendText(this.text);
+            this._client.SendText("PCAssistant is restarting...");
+
+            // we run the job in 5 seconds to allow
+            // the bot client to observe the message
+            // and prevent it from going into an endless loop
+
+            var _Job = new RestartJob();
+            JobManager.Initialize(_Job);
         }
 
         public override void Dispatch(DispatchData data)
@@ -31,16 +37,7 @@ namespace Plugins.Help
 
         public override void Init(IDependencyService service)
         {
-            StringBuilder builder = new();
             this._client = service.ResolveInstance<ITGBotClient>();
-            var _Plugins = service.ResolveInstances<IPlugin>();
-
-            foreach (IPlugin _P in _Plugins)
-            {
-                builder.AppendLine(_P.ToString());
-            }
-
-            this.text = builder.ToString().TrimEnd();
         }
     }
 }
