@@ -6,9 +6,12 @@ namespace Sdk.Clients
     public interface ITGBotClient
     {
         User GetMe();
-        void SendText(string text);
-        void SendPhoto(Stream stream, string fileName);
-        void SendDocument(Stream stream, string fileName);
-        void StartReceiving(IUpdateHandler updateHandler, ReceiverOptions options, CancellationTokenSource cts);
+
+        void SendTextBackToAdmin(string text);
+        void SendPhotoBackToAdmin(Stream stream, string fileName);
+        void SendDocumentBackToAdmin(Stream stream, string fileName);
+
+        void StopListen();
+        void StartListen(IUpdateHandler updateHandler);
     }
 }

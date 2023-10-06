@@ -21,7 +21,7 @@ namespace Plugins.Help
 
         public override void Dispatch()
         {
-            this._client.SendText(this.text);
+            this._client.SendTextBackToAdmin(this.text);
         }
 
         public override void Dispatch(DispatchData data)

@@ -29,7 +29,7 @@ namespace msinfo32
                 sb.AppendLine(_component.GetInformation());
             }
 
-            this._client.SendText(sb.ToString());
+            this._client.SendTextBackToAdmin(sb.ToString());
         }
 
         public override void Dispatch(DispatchData data)

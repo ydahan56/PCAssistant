@@ -81,7 +81,7 @@ namespace crontemp
             {
                 JobManager.RemoveJob(this.jobName);
                 this.state = JobState.Stopped;
-                this._client.SendText($"{base.Name} has been cancelled.");
+                this._client.SendTextBackToAdmin($"{base.Name} has been cancelled.");
                 return;
             }
         }
@@ -90,7 +90,7 @@ namespace crontemp
         {
             if (this.state == JobState.Started)
             {
-                this._client.SendText($"{base.Name} is already running.");
+                this._client.SendTextBackToAdmin($"{base.Name} is already running.");
                 return;
             }
 
@@ -109,7 +109,7 @@ namespace crontemp
             this.state = JobState.Started;
 
             // report to client
-            this._client.SendText(string.Format(SUCCESS_MESSAGE, e.Total, e.Timeout));
+            this._client.SendTextBackToAdmin(string.Format(SUCCESS_MESSAGE, e.Total, e.Timeout));
         }
 
         private void OnJobUpdate(JobUpdateState status, UpdateArgs? args)
@@ -118,7 +118,7 @@ namespace crontemp
             {
                 JobManager.RemoveJob(this.jobName);
                 this.state = JobState.Stopped;
-                this._client.SendText($"{base.Name} has elapsed.");
+                this._client.SendTextBackToAdmin($"{base.Name} has elapsed.");
                 return;
             }
 
@@ -131,7 +131,7 @@ namespace crontemp
             if (status == JobUpdateState.Send)
             {
                 this.sb.AppendLine("\nFrom *Telebot*");
-                this._client.SendText(this.sb.ToString());
+                this._client.SendTextBackToAdmin(this.sb.ToString());
 
                 this.sb.Clear();
                 return;

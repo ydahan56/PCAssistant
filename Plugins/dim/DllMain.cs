@@ -39,11 +39,11 @@ namespace Plugins.Dim
             var error = this._brightnessMethods.WmiSetBrightness(level);
             if (error == 0)
             {
-                this._client.SendText($"Successfully adjusted brightness to {level}%.");
+                this._client.SendTextBackToAdmin($"Successfully adjusted brightness to {level}%.");
                 return;
             }
 
-            this._client.SendText($"WmiSetBrightness returned with an error {error}");
+            this._client.SendTextBackToAdmin($"WmiSetBrightness returned with an error {error}");
         }
 
         public override void Init(IDependencyService service)

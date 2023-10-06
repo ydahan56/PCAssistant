@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>$(MSBuildProjectName).Plugin</AssemblyName>
@@ -14,9 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Sdk">
-      <HintPath>..\..\Sdk\bin\Debug\net6.0-windows\Sdk.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\Sdk\Sdk.csproj" />
   </ItemGroup>
 
 </Project>

@@ -27,19 +27,18 @@ namespace Agent
             var token = Env.GetString("_token");
             var chatId = Convert.ToInt64(Env.GetString("_id"));
 
-            var tgBotClient = new TGBotClient(token, chatId);
+            var botClient = new TGBotClient(token, chatId);
             var cpuidHelper = new CpuidHelper();
-            var cts = new CancellationTokenSource();
 
             List<IPlugin> _Plugins;
             LoadPlugins(out _Plugins);
 
-            RegisterComponents(tgBotClient, cpuidHelper, _Plugins);
+            RegisterComponents(botClient, cpuidHelper, _Plugins);
             InitPlugins(_Plugins);
 
-            Application.Run(new Main(tgBotClient, cts));
+            Application.Run(new Main(botClient));
 
-            cts.Cancel();
+            botClient.StopListen();
             JobManager.Stop();
             Cpuid64.Instance.Sdk64.UninitSDK();
         }

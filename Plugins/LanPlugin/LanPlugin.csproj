@@ -14,17 +14,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="wnet.exe" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="wnet.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\Sdk\Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="wnet.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

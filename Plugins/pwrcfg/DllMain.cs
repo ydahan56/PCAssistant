@@ -75,7 +75,7 @@ namespace pwrcfg
 
         private void Lock_Event(Lock e)
         {
-            this._client.SendText($"lock called with timeout {e.Timeout}");
+            this._client.SendTextBackToAdmin($"lock called with timeout {e.Timeout}");
 
             var _Job = new LockJob(e.Timeout);
             JobManager.Initialize(_Job);
@@ -83,7 +83,7 @@ namespace pwrcfg
 
         private void Logoff_Event(Logoff e)
         {
-            this._client.SendText($"logoff called with timeout {e.Timeout}");
+            this._client.SendTextBackToAdmin($"logoff called with timeout {e.Timeout}");
 
             var _Job = new LogoffJob(e.Timeout);
             JobManager.Initialize(_Job);
@@ -91,7 +91,7 @@ namespace pwrcfg
 
         private void Sleep_Event(Sleep e)
         {
-            this._client.SendText($"sleep called with timeout {e.Timeout}");
+            this._client.SendTextBackToAdmin($"sleep called with timeout {e.Timeout}");
 
             var _Job = new SleepJob(e.Timeout);
             JobManager.Initialize(_Job);
@@ -99,7 +99,7 @@ namespace pwrcfg
 
         private void Shutdown_Event(Shutdown e)
         {
-            this._client.SendText($"shutdown called with timeout {e.Timeout}");
+            this._client.SendTextBackToAdmin($"shutdown called with timeout {e.Timeout}");
 
             var _Job = new ShutdownJob(e.Timeout);
             JobManager.Initialize(_Job);
@@ -107,7 +107,7 @@ namespace pwrcfg
 
         private void Reboot_Event(Reboot e)
         {
-            this._client.SendText($"reboot called with timeout {e.Timeout}");
+            this._client.SendTextBackToAdmin($"reboot called with timeout {e.Timeout}");
 
             var _Job = new RebootJob(e.Timeout);
             JobManager.Initialize(_Job);

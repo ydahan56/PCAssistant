@@ -9,7 +9,7 @@ namespace Agent
 {
     public class Main : ApplicationContext
     {
-        public Main(ITGBotClient client, CancellationTokenSource cts)
+        public Main(ITGBotClient client)
         {
             // init tray
             var tray = new NotifyIcon()
@@ -20,7 +20,7 @@ namespace Agent
             };
 
             // create an instace of init job
-            var startup_Job = new Startup(client, cts, tray);
+            var startup_Job = new Startup(client, tray);
 
             // init startup and refresh job
             JobManager.Initialize(startup_Job, Cpuid64.Instance);
@@ -29,15 +29,12 @@ namespace Agent
 
     internal class Startup : Registry
     {
-        private readonly ITGBotClient _client;
-        private readonly CancellationTokenSource cts;
+        private readonly ITGBotClient client;
         private readonly NotifyIcon tray;
 
-        public Startup(ITGBotClient client, CancellationTokenSource cts, NotifyIcon tray)
+        public Startup(ITGBotClient client, NotifyIcon tray)
         {
-            this._client = client;
-            this.cts = cts;
-
+            this.client = client;
             this.tray = tray;
 
             this.Schedule(this.StartEventListener).ToRunOnceIn(5).Seconds();
@@ -48,23 +45,18 @@ namespace Agent
         private void StartEventListener()
         {
             var update = new MainUpdateHandler(this.tray);
-            var options = new ReceiverOptions()
-            {
-                AllowedUpdates = new UpdateType[] { UpdateType.Message }
-            };
-
-            this._client.StartReceiving(update, options, this.cts);
+            this.client.StartListen(update);
         }
 
         private void AddBotNicknameToTrayTitle()
         {
-            var user = this._client.GetMe();
+            var user = this.client.GetMe();
             this.tray.Text += $" - {user.Username}";
         }
 
         private void SendBotClientHelloToAdmin()
         {
-            this._client.SendText($"*{this.tray.Text}*: I'm Up.");
+            this.client.SendTextBackToAdmin($"*{this.tray.Text}*: I'm Up.");
         }
     }
 }

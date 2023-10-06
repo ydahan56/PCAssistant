@@ -39,7 +39,7 @@ namespace prtsc
                 // reset position (important)
                 buffer.Position = 0;
 
-                this._client.SendPhoto(buffer, fileName);
+                this._client.SendPhotoBackToAdmin(buffer, fileName);
             }
         }
 

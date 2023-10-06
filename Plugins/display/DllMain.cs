@@ -44,12 +44,12 @@ namespace Plugins.Display
             var success = this._dict.TryGetValue(args.State, out int lparam);
             if (!success)
             {
-                this._client.SendText($"state {args.State} does not exist.");
+                this._client.SendTextBackToAdmin($"state {args.State} does not exist.");
                 return;
             }
 
             var error = PostMessage(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, lparam);
-            this._client.SendText($"error returned with exit code {error}");
+            this._client.SendTextBackToAdmin($"error returned with exit code {error}");
         }
 
         public override void Init(IDependencyService service)

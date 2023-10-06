@@ -9,12 +9,16 @@ namespace Sdk.Clients
     public class TGBotClient : ITGBotClient
     {
         private readonly ITelegramBotClient _client;
-        private readonly long _chat_Id;
+        private readonly CancellationTokenSource _cancel;
 
-        public TGBotClient(string token, long chat_Id)
+        private readonly ChatId _chatId;
+
+        public TGBotClient(string token, long chatId)
         {
             this._client = new TelegramBotClient(token);
-            this._chat_Id = chat_Id;
+            this._cancel = new CancellationTokenSource();
+
+            this._chatId = new ChatId(chatId);
         }
 
         public User GetMe()
@@ -22,26 +26,35 @@ namespace Sdk.Clients
             return AsyncContext.Run(async () => await this._client.GetMeAsync());
         }
 
-        public void SendPhoto(Stream stream, string fileName)
+        public void SendPhotoBackToAdmin(Stream stream, string fileName)
         {
             var media = InputFile.FromStream(stream, fileName);
-            AsyncContext.Run(async () => await this._client.SendPhotoAsync(this._chat_Id, media));
+            AsyncContext.Run(async () => await this._client.SendPhotoAsync(this._chatId, media));
         }
 
-        public void SendDocument(Stream stream, string fileName)
+        public void SendDocumentBackToAdmin(Stream stream, string fileName)
         {
             var file = InputFile.FromStream(stream, fileName);
-            AsyncContext.Run(async () => await this._client.SendDocumentAsync(this._chat_Id, file));
+            AsyncContext.Run(async () => await this._client.SendDocumentAsync(this._chatId, file));
         }
 
-        public void SendText(string text)
+        public void SendTextBackToAdmin(string text)
         {
-            AsyncContext.Run(async () => await this._client.SendTextMessageAsync(this._chat_Id, text, parseMode: ParseMode.Markdown));
+            AsyncContext.Run(async () => await this._client.SendTextMessageAsync(this._chatId, text, parseMode: ParseMode.Markdown));
         }
 
-        public void StartReceiving(IUpdateHandler updateHandler, ReceiverOptions recvOptions, CancellationTokenSource cts)
+        public void StopListen()
         {
-            this._client.StartReceiving(updateHandler, recvOptions, cts.Token);
+            this._cancel.Cancel();
+        }
+
+        public void StartListen(IUpdateHandler updateHandler)
+        {
+            var options = new ReceiverOptions() {
+                AllowedUpdates = new UpdateType[] { UpdateType.Message }
+            };
+
+            this._client.StartReceiving(updateHandler, options, this._cancel.Token);
         }
     }
 }

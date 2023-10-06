@@ -20,7 +20,7 @@ namespace New
 
         public override void Dispatch()
         {
-            this._client.SendText("PCAssistant is restarting...");
+            this._client.SendTextBackToAdmin("PCAssistant is restarting...");
 
             // we run the job in 5 seconds to allow
             // the bot client to observe the message
