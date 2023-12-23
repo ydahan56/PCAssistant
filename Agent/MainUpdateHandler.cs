@@ -46,6 +46,8 @@ namespace Agent
         {
             var message = update.Message;
 
+            //return Task.CompletedTask; // debug purpose
+
             if (message!.From!.Id != this.authorized_Id)
             {
                 AsyncContext.Run(async () => await client.SendTextMessageAsync(message.Chat.Id, "Unauthorized."));

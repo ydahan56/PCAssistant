@@ -15,14 +15,13 @@ namespace Plugins.Display
             public string State { get; set; }
         }
 
-        private ITGBotClient _client;
+        private ITGBotClient _telegram;
         private Dictionary<string, int> _dict;
 
         public DllMain()
         {
             this.Name = "/display";
             this.ArgsPattern = "on|off";
-            this.HasArguments = true;
             this.Description = "Turn the display on or off.";
 
             this._dict = new Dictionary<string, int>()
@@ -44,17 +43,17 @@ namespace Plugins.Display
             var success = this._dict.TryGetValue(args.State, out int lparam);
             if (!success)
             {
-                this._client.SendTextBackToAdmin($"state {args.State} does not exist.");
+                this._telegram.SendTextBackToAdmin($"state {args.State} does not exist.");
                 return;
             }
 
             var error = PostMessage(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, lparam);
-            this._client.SendTextBackToAdmin($"error returned with exit code {error}");
+            this._telegram.SendTextBackToAdmin($"error returned with exit code {error}");
         }
 
         public override void Init(IDependencyService service)
         {
-            this._client = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<ITGBotClient>();
         }
     }
 }

@@ -9,18 +9,17 @@ namespace New
 {
     public class DllMain : PluginBase
     {
-        private ITGBotClient _client;
+        private ITGBotClient _telegram;
 
         public DllMain()
         {
             this.Name = "/new";
-            this.HasArguments = false;
             this.Description = "Create a new instance of PCAssistant.";
         }
 
         public override void Dispatch()
         {
-            this._client.SendTextBackToAdmin("PCAssistant is restarting...");
+            this._telegram.SendTextBackToAdmin("PCAssistant is restarting...");
 
             // we run the job in 5 seconds to allow
             // the bot client to observe the message
@@ -37,7 +36,7 @@ namespace New
 
         public override void Init(IDependencyService service)
         {
-            this._client = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<ITGBotClient>();
         }
     }
 }

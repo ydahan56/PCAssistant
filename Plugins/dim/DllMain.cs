@@ -1,9 +1,14 @@
 ﻿using CommandLine;
-using ORMi;
+using dim;
+using Sdk;
 using Sdk.Base;
 using Sdk.Clients;
 using Sdk.Containers;
 using Sdk.Models;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
+
 
 namespace Plugins.Dim
 {
@@ -12,17 +17,15 @@ namespace Plugins.Dim
         private class Brightness
         {
             [Value(0)]
-            public byte Level { get; set; }
+            public int BrightnessLevel { get; set; }
         }
 
-        private ITGBotClient _client;
-        private WmiMonitorBrightnessMethods _brightnessMethods;
+        private ITGBotClient _telegram;
 
         public DllMain()
         {
             this.Name = "/dim";
             this.ArgsPattern = "\\d{1,3}";
-            this.HasArguments = true;
             this.Description = "Adjust workstation brightness.";
         }
 
@@ -34,31 +37,29 @@ namespace Plugins.Dim
         public override void Dispatch(DispatchData data)
         {
             var args = Parser.Default.ParseArguments<Brightness>(data.Args);
-            var level = args.Value.Level;
 
-            var error = this._brightnessMethods.WmiSetBrightness(level);
-            if (error == 0)
+            if (args.Value.BrightnessLevel < 1 || args.Value.BrightnessLevel > 100)
             {
-                this._client.SendTextBackToAdmin($"Successfully adjusted brightness to {level}%.");
+                this._telegram.SendTextBackToAdmin("Argument must be between 1 to 100.");
                 return;
             }
 
-            this._client.SendTextBackToAdmin($"WmiSetBrightness returned with an error {error}");
+            var brightness = args.Value.BrightnessLevel;
+
+            var scriptPath = PCManager.CombineExternal(Assembly.GetExecutingAssembly(), "execute.ps1");
+            var result = new PowerShellBuilder()
+                .BypassExecutionPolicy()
+                .SetWindowStyle(PSWindowStyle.Hidden)
+                .SetFileScriptPath(scriptPath)
+                .SetArgument(brightness)
+                .ExecuteScript();
+
+            this._telegram.SendTextBackToAdmin(result);
         }
 
         public override void Init(IDependencyService service)
         {
-            this._client = service.ResolveInstance<ITGBotClient>();
-            this._brightnessMethods = new WmiMonitorBrightnessMethods();
-        }
-    }
-
-    [WMIClass("WmiMonitorBrightnessMethods")]
-    internal class WmiMonitorBrightnessMethods : WMIInstance
-    {
-        public int WmiSetBrightness(byte level)
-        {
-            return WMIMethod.ExecuteMethod<int>(this, new { Timeout = 1, Brightness = level });
+            this._telegram = service.ResolveInstance<ITGBotClient>();
         }
     }
 }

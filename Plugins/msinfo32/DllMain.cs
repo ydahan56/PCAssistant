@@ -10,13 +10,12 @@ namespace msinfo32
 {
     public class DllMain : PluginBase
     {
-        private ITGBotClient _client;
+        private ITGBotClient _telegram;
         private IEnumerable<IComponent> _components;
 
         public DllMain()
         {
             base.Name = "/msinfo32";
-            base.HasArguments = false;
             base.Description = "Print workstation information.";
         }
 
@@ -29,7 +28,7 @@ namespace msinfo32
                 sb.AppendLine(_component.GetInformation());
             }
 
-            this._client.SendTextBackToAdmin(sb.ToString());
+            this._telegram.SendTextBackToAdmin(sb.ToString());
         }
 
         public override void Dispatch(DispatchData data)
@@ -39,7 +38,7 @@ namespace msinfo32
 
         public override void Init(IDependencyService service)
         {
-            this._client = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<ITGBotClient>();
             var cpuidHelper = service.ResolveInstance<ICpuidHelper>();
 
             var _devices = cpuidHelper.GetProcessors()

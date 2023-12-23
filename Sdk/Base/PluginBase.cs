@@ -7,8 +7,8 @@ namespace Sdk.Base
     public abstract class PluginBase : IPlugin
     {
         public string? Name { get; protected set; }
-        public string? ArgsPattern { get; protected set; }
-        public bool HasArguments { get; protected set; }
+        public string? ArgsPattern { get; protected set; } = string.Empty;
+        public bool HasArguments => !string.IsNullOrWhiteSpace(ArgsPattern);
         public string? Description { get; protected set; }
 
         public abstract void Dispatch();

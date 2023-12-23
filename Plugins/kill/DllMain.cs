@@ -16,13 +16,12 @@ namespace kill
             public int PID { get; set; }
         }
 
-        private ITGBotClient _client;
+        private ITGBotClient _telegram;
 
         public DllMain()
         {
             this.Name = "/kill";
             this.ArgsPattern = "(\\d+)";
-            this.HasArguments = true;
             this.Description = "Kill a task by its id.";
         }
 
@@ -38,7 +37,7 @@ namespace kill
 
         public override void Init(IDependencyService service)
         {
-            this._client = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<ITGBotClient>();
         }
 
         private void KillEvent(Args args)
@@ -52,7 +51,7 @@ namespace kill
             }
             catch (Exception e)
             {
-                this._client.SendTextBackToAdmin(e.Message);
+                this._telegram.SendTextBackToAdmin(e.Message);
                 return;
             }
 
@@ -66,7 +65,7 @@ namespace kill
                 text = e.Message;
             }
 
-            this._client.SendTextBackToAdmin(text);
+            this._telegram.SendTextBackToAdmin(text);
         }
     }
 }

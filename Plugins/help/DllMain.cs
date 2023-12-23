@@ -10,18 +10,17 @@ namespace Plugins.Help
     public class DllMain : PluginBase
     {
         private string text;
-        private ITGBotClient _client;
+        private ITGBotClient _telegram;
 
         public DllMain()
         {
             this.Name = "/help";
-            this.HasArguments = false;
             this.Description = "List of available commands.";
         }
 
         public override void Dispatch()
         {
-            this._client.SendTextBackToAdmin(this.text);
+            this._telegram.SendTextBackToAdmin(this.text);
         }
 
         public override void Dispatch(DispatchData data)
@@ -32,7 +31,7 @@ namespace Plugins.Help
         public override void Init(IDependencyService service)
         {
             StringBuilder builder = new();
-            this._client = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<ITGBotClient>();
             var _Plugins = service.ResolveInstances<IPlugin>();
 
             foreach (IPlugin _P in _Plugins)

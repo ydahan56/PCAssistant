@@ -75,7 +75,14 @@ namespace Agent
         {
             foreach (IPlugin _Plugin in _Plugins)
             {
-                _Plugin.Init(AppService);
+                try
+                {
+                    _Plugin.Init(AppService);
+                }
+                catch (NotImplementedException)
+                {
+                    // ignore
+                }
             }
         }
 

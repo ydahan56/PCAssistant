@@ -1,39 +1,29 @@
-﻿using AutoUpdaterDotNET;
-using FluentScheduler;
+﻿using FluentScheduler;
+using Sdk.Base;
 using Sdk.Contracts;
 using Sdk.Hub;
 using Sdk.Models;
 using Telegram.Bot;
-using UpdatePlugin;
 
 namespace Plugins.Update
 {
-    public class DllMain : IModule
+    public class DllMain : PluginBase
     {
-        private readonly UpdateJob _updateJob;
         private readonly Dictionary<string, Func<int, Task>> _stateActions;
 
-        private UpdateInfoEventArgs? _updateInfoEventArgs;
-
-        private const string castUrl = "https://raw.githubusercontent.com/dahanj95/Telebot/master/update.xml";
+        private const string castUrl = "https://raw.githubusercontent.com/yoni56/PCAssistant/master/update.xml";
 
         public DllMain()
         {
-            Name = "/update";
-            Arguments = "(chk|dl)";
-            HasArguments = true;
-            Description = "Check or download an update.";
+            base.Name = "/update";
+            base.ArgsPattern = "(chk|dl)";
+            base.Description = "Check or download an update.";
 
-            _stateActions = new Dictionary<string, Func<int, Task>>()
+            this._stateActions = new Dictionary<string, Func<int, Task>>()
             {
                 { "chk", CheckAction },
                 { "dl", DownloadAction }
             };
-
-            AutoUpdater.AppCastURL = castUrl;
-            AutoUpdater.CheckForUpdateEvent += UpdateCheck;
-
-            _updateJob = new UpdateJob();
         }
 
         private async void UpdateCheck(UpdateInfoEventArgs e)
@@ -53,9 +43,9 @@ namespace Plugins.Update
             }
         }
 
-        public override async void Execute(ExecuteData executeData)
+        public override void Dispatch(DispatchData data)
         {
-            string state = executeData.Arguments[1].Value;
+            string state = data.Arguments[1].Value;
             bool success = _stateActions.TryGetValue(state, out var action);
 
             if (success)
