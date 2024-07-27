@@ -1,18 +1,20 @@
-﻿using Sdk.Containers;
+﻿using Sdk.Base;
+using Sdk.Dependencies;
 using Sdk.Models;
 
 namespace Sdk.Contracts
 {
     public interface IPlugin
     {
-        string? Name { get; }
-        string? ArgsPattern { get; }
-        bool HasArguments { get; }
-        string? Description { get; }
+        // This is used to get the plugin and invoke on a separate thread
+        (bool success, Plugin? result) TryGetPlugin(string[] args);
 
-        void Dispatch();
-        void Dispatch(DispatchData data);
-        void Init(IDependencyService service);
+        // todo - remove? maybe we dont need to pass services from Agent to plugins
+        void Initialize(IServiceLocator services);
+
+      //  void SetExecuteArgs(string[] args);
+        void SetExecuteResultCallback(Action<ExecuteResult> callback);
+     
 
         string ToString();
     }

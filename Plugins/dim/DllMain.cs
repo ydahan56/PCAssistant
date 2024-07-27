@@ -2,9 +2,10 @@
 using dim;
 using Sdk;
 using Sdk.Base;
-using Sdk.Clients;
-using Sdk.Containers;
+using Sdk.Contracts;
+using Sdk.Dependencies;
 using Sdk.Models;
+using Sdk.Telegram;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -12,54 +13,56 @@ using System.Runtime.InteropServices;
 
 namespace Plugins.Dim
 {
-    public class DllMain : PluginBase
+    public class DllMain : Plugin
     {
-        private class Brightness
+        [Verb("dim", HelpText = "Adjust Workstation Brightness.")]
+        public class Options
         {
-            [Value(0)]
+            [Option("level", Required = true, HelpText = "Brightness Level", Min = 1, Max = 100)]
             public int BrightnessLevel { get; set; }
         }
 
-        private ITGBotClient _telegram;
+        public Options Args { get; private set; }
 
+        public DllMain(Options args)
+        {
+            this.Args = args;
+            this.Schedule(this).ToRunNow();
+        }
+
+        // Default ctor for reflection
         public DllMain()
         {
-            this.Name = "/dim";
-            this.ArgsPattern = "\\d{1,3}";
-            this.Description = "Adjust workstation brightness.";
+            
         }
 
-        public override void Dispatch()
+        public override (bool success, Plugin? result) TryGetPlugin(string[] args)
         {
-            throw new NotImplementedException();
-        }
-
-        public override void Dispatch(DispatchData data)
-        {
-            var args = Parser.Default.ParseArguments<Brightness>(data.Args);
-
-            if (args.Value.BrightnessLevel < 1 || args.Value.BrightnessLevel > 100)
+            if (Parser.Default.ParseArguments<Options>(args) is Parsed<Options> parsed)
             {
-                this._telegram.SendTextBackToAdmin("Argument must be between 1 to 100.");
-                return;
+                var instance = new DllMain(parsed.Value);
+                return (true, instance);
             }
 
-            var brightness = args.Value.BrightnessLevel;
+            return (false, null);
+        }
 
+        public override void Execute()
+        {
             var scriptPath = PCManager.CombineExternal(Assembly.GetExecutingAssembly(), "execute.ps1");
+
             var result = new PowerShellBuilder()
                 .BypassExecutionPolicy()
                 .SetWindowStyle(PSWindowStyle.Hidden)
                 .SetFileScriptPath(scriptPath)
-                .SetArgument(brightness)
+                .SetArgument(this.Args.BrightnessLevel)
                 .ExecuteScript();
 
-            this._telegram.SendTextBackToAdmin(result);
-        }
-
-        public override void Init(IDependencyService service)
-        {
-            this._telegram = service.ResolveInstance<ITGBotClient>();
+            this.ExecuteResultCallback?.Invoke(new ExecuteResult()
+            {
+                ErrorMessage = result,
+                Success = true
+            });
         }
     }
 }

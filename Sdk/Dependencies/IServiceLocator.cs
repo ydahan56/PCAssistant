@@ -1,6 +1,6 @@
-﻿namespace Sdk.Containers
+﻿namespace Sdk.Dependencies
 {
-    public interface IDependencyService
+    public interface IServiceLocator
     {
         T ResolveInstance<T>() where T : class;
         IEnumerable<T> ResolveInstances<T>() where T : class;

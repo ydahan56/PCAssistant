@@ -1,15 +1,14 @@
 ﻿using Hardware;
 using FluentScheduler;
-using Sdk.Clients;
-using Telegram.Bot.Polling;
-using Telegram.Bot.Types.Enums;
-using System.Reflection;
+using Sdk.Telegram;
+using Nito.AsyncEx;
+using Telegram.Bot.Types;
 
 namespace Agent
 {
     public class Main : ApplicationContext
     {
-        public Main(ITGBotClient client)
+        public Main(IPCAssistant client)
         {
             // init tray
             var tray = new NotifyIcon()
@@ -20,22 +19,22 @@ namespace Agent
             };
 
             // create an instace of init job
-            var startup_Job = new Startup(client, tray);
+            var startup = new Startup(client, tray);
 
             // init startup and refresh job
-            JobManager.Initialize(startup_Job, Cpuid64.Instance);
+            JobManager.Initialize(startup, Cpuid64.Instance);
         }
     }
 
     internal class Startup : Registry
     {
-        private readonly ITGBotClient client;
-        private readonly NotifyIcon tray;
+        private readonly IPCAssistant _client;
+        private readonly NotifyIcon _tray;
 
-        public Startup(ITGBotClient client, NotifyIcon tray)
+        public Startup(IPCAssistant client, NotifyIcon tray)
         {
-            this.client = client;
-            this.tray = tray;
+            this._client = client;
+            this._tray = tray;
 
             this.Schedule(this.StartEventListener).ToRunOnceIn(5).Seconds();
             this.Schedule(this.AddBotNicknameToTrayTitle).ToRunOnceIn(5).Seconds();
@@ -44,19 +43,27 @@ namespace Agent
 
         private void StartEventListener()
         {
-            var update = new MainUpdateHandler(this.tray);
-            this.client.StartListen(update);
+            var update = new AgentUpdateHandler(this._tray, this._client);
+            this._client.StartReceiving(update);
         }
 
         private void AddBotNicknameToTrayTitle()
         {
-            var user = this.client.GetMe();
-            this.tray.Text += $" - {user.Username}";
+            AsyncContext.Run(async () =>
+            {
+                User user = await this._client.GetMeAsync();
+                Program.UIThread.Invoke(() => this._tray.Text += $" - {user.Username}");
+            });
         }
 
         private void SendBotClientHelloToAdmin()
         {
-            this.client.SendTextBackToAdmin($"*{this.tray.Text}*: I'm Up.");
+            AsyncContext.Run(async () =>
+            {
+                string trayTitle = "";
+                Program.UIThread.Invoke(() => trayTitle = this._tray.Text);
+                await this._client.SendTextToWhitelistAsync($"*{trayTitle}*: I'm Up.");
+            });
         }
     }
 }

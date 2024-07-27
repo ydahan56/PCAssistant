@@ -1,14 +1,21 @@
-﻿using SimpleInjector;
+﻿using Sdk.Dependencies;
+using SimpleInjector;
 
 namespace Sdk.Containers
 {
-    public class AppService : IDependencyService
+
+    /*
+     * Basically, this class just abstracts away the SimpleInjector container.
+     * We don't want to be passing around the Container itself, so we wrap it in this class.
+    */
+
+    public class DependencyLocator : IServiceLocator
     {
         private readonly Container _container;
 
-        public AppService(Container container)
+        public DependencyLocator(Container container)
         {
-            _container = container;
+            this._container = container;
         }
 
         public void RegisterInstance<T>(T instance) where T : class

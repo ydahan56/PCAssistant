@@ -1,13 +1,13 @@
 ﻿using CommandLine;
 using Sdk.Base;
-using Sdk.Clients;
-using Sdk.Containers;
+using Sdk.Dependencies;
 using Sdk.Models;
+using Sdk.Telegram;
 using System.Diagnostics;
 
 namespace kill
 {
-    public class DllMain : PluginBase
+    public class DllMain : Plugin
     {
         [Verb("/kill")]
         public class Args
@@ -16,12 +16,12 @@ namespace kill
             public int PID { get; set; }
         }
 
-        private ITGBotClient _telegram;
+        private IPCAssistant _telegram;
 
         public DllMain()
         {
             this.Name = "/kill";
-            this.ArgsPattern = "(\\d+)";
+            this.Args = "(\\d+)";
             this.Description = "Kill a task by its id.";
         }
 
@@ -30,14 +30,14 @@ namespace kill
             throw new NotImplementedException();
         }
 
-        public override void Dispatch(DispatchData data)
+        public override void Dispatch(ExecuteResult data)
         {
             Parser.Default.ParseArguments<Args>(data.Args).WithParsed(this.KillEvent);
         }
 
-        public override void Init(IDependencyService service)
+        public override void Initialize(IServiceLocator service)
         {
-            this._telegram = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<IPCAssistant>();
         }
 
         private void KillEvent(Args args)

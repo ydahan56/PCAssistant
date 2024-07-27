@@ -3,13 +3,13 @@ using FluentScheduler;
 using pwrcfg.Commands;
 using pwrcfg.Jobs;
 using Sdk.Base;
-using Sdk.Clients;
-using Sdk.Containers;
+using Sdk.Dependencies;
 using Sdk.Models;
+using Sdk.Telegram;
 
 namespace pwrcfg
 {
-    public class DllMain : PluginBase
+    public class DllMain : Plugin
     {
         private class TimeoutVerb
         {
@@ -42,13 +42,13 @@ namespace pwrcfg
         {
         }
 
-        private ITGBotClient _telegram;
+        private IPCAssistant _telegram;
         private readonly Parser _parser;
 
         public DllMain()
         {
             base.Name = "/pwrcfg";
-            base.ArgsPattern = "lock|logoff|sleep|reboot|shutdown (\\d)";
+            base.Args = "lock|logoff|sleep|reboot|shutdown (\\d)";
             base.Description = "Lock, logoff, sleep, reboot or shutdown the workstation.";
 
             this._parser = new Parser(with =>
@@ -62,7 +62,7 @@ namespace pwrcfg
             throw new NotImplementedException();
         }
 
-        public override void Dispatch(DispatchData data)
+        public override void Dispatch(ExecuteResult data)
         {
             this._parser.ParseArguments<Lock, Logoff, Sleep, Reboot, Shutdown>(data.Args)
                 .WithParsed<Lock>(this.Lock_Event)
@@ -112,9 +112,9 @@ namespace pwrcfg
             JobManager.Initialize(_Job);
         }
 
-        public override void Init(IDependencyService service)
+        public override void Initialize(IServiceLocator service)
         {
-            this._telegram = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<IPCAssistant>();
         }
     }
 }

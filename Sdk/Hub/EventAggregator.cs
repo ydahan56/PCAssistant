@@ -2,13 +2,13 @@
 
 namespace Sdk.Hub
 {
-    public sealed class Mediator
+    public sealed class EventAggregator
     {
-        public static Mediator Instance { get; } = new Mediator();
+        public static EventAggregator Instance { get; } = new EventAggregator();
 
         public IMessageHub MessageHub;
 
-        private Mediator()
+        private EventAggregator()
         {
             this.MessageHub = new MessageHub();
         }

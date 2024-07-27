@@ -4,17 +4,17 @@ using crontemp.Jobs;
 using crontemp.Models;
 using FluentScheduler;
 using Sdk.Base;
-using Sdk.Clients;
-using Sdk.Containers;
 using Sdk.Contracts;
+using Sdk.Dependencies;
 using Sdk.Devices;
 using Sdk.Extensions;
 using Sdk.Models;
+using Sdk.Telegram;
 using System.Text;
 
 namespace crontemp
 {
-    public class DllMain : PluginBase
+    public class DllMain : Plugin
     {
         [Verb("off")]
         public class Disable
@@ -33,7 +33,7 @@ namespace crontemp
             public int Timeout { get; set; }
         }
 
-        private ITGBotClient _telegram;
+        private IPCAssistant _telegram;
         private IEnumerable<IDevice> _devices;
 
         private JobState state;
@@ -48,7 +48,7 @@ namespace crontemp
         public DllMain()
         {
             base.Name = "/crontemp";
-            base.ArgsPattern = "(\\d+) (\\d+)|off";
+            base.Args = "(\\d+) (\\d+)|off";
             base.Description = "Schedules temperature monitor.";
 
             this.sb = new StringBuilder();
@@ -67,7 +67,7 @@ namespace crontemp
             throw new NotImplementedException();
         }
 
-        public override void Dispatch(DispatchData data)
+        public override void Dispatch(ExecuteResult data)
         {
             this.parser.ParseArguments<Enable, Disable>(data.Args)
                 .WithParsed<Enable>(this.Enable_Event)
@@ -137,11 +137,11 @@ namespace crontemp
             }
         }
 
-        public override void Init(IDependencyService service)
+        public override void Initialize(IServiceLocator service)
         {
             var cpuid = service.ResolveInstance<ICpuidHelper>();
 
-            this._telegram = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<IPCAssistant>();
             this._devices = cpuid.GetProcessors().Concat(cpuid.GetDisplayAdapters()).ToList();
         }
 

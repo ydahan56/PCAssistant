@@ -13,7 +13,7 @@ namespace New.Jobs
 
         public void Execute()
         {
-            Mediator.Instance.MessageHub.Publish(ApplicationEvent.Restart);
+            EventAggregator.Instance.MessageHub.Publish(ApplicationEvent.Restart);
         }
     }
 }

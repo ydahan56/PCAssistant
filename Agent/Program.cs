@@ -2,43 +2,47 @@ using Hardware;
 using DotNetEnv;
 using FluentScheduler;
 using Agent.Helpers;
-using Sdk.Clients;
+using Sdk.Telegram;
 using Sdk.Containers;
 using Sdk.Contracts;
 using Sdk.Hub;
 using SimpleInjector;
 using System.Reflection;
+using Sdk.Telegram;
+using Sdk.Dependencies;
+using Sdk;
 
 namespace Agent
 {
     internal static class Program
     {
-        public static IDependencyService AppService { get; private set; }
+        public static IServiceLocator Services { get; private set; }
+        public static Control UIThread { get; set; }
 
         [STAThread]
         static void Main()
         {
             Env.Load();
 
-            Mediator.Instance.MessageHub.Subscribe<ApplicationEvent>(OnApplicationEvent);
+            EventAggregator.Instance.MessageHub.Subscribe<ApplicationEvent>(OnApplicationEvent);
 
-            AppService = new AppService(new Container());
+            Services = new DependencyLocator(new Container());
 
-            var token = Env.GetString("_token");
-            var chatId = Convert.ToInt64(Env.GetString("_id"));
+            var token = Env.GetString("token");
+            var whitelist = Env.GetString("whitelist")
+                .Select(id => Convert.ToInt64(id))
+                .ToList();
 
-            var botClient = new TGBotClient(token, chatId);
+            var telegram = new AssistantBot(token, whitelist);
             var cpuidHelper = new CpuidHelper();
 
-            List<IPlugin> _Plugins;
-            LoadPlugins(out _Plugins);
+            var plugins = ReadAndCreatePlugins();
+            RegisterComponents(telegram, cpuidHelper, plugins);
+            InitializePlugins(plugins);
 
-            RegisterComponents(botClient, cpuidHelper, _Plugins);
-            InitPlugins(_Plugins);
+            Application.Run(new Main(telegram));
 
-            Application.Run(new Main(botClient));
-
-            botClient.StopListen();
+            telegram.Cancel();
             JobManager.Stop();
             Cpuid64.Instance.Sdk64.UninitSDK();
         }
@@ -57,27 +61,27 @@ namespace Agent
         }
 
         static void RegisterComponents(
-            ITGBotClient client,
+            IPCAssistant client,
             ICpuidHelper cpuidHelper,
             IEnumerable<IPlugin> plugins)
         {
             // instances
-            AppService.RegisterInstance(client);
-            AppService.RegisterInstance(cpuidHelper);
+            Services.RegisterInstance(client);
+            Services.RegisterInstance(cpuidHelper);
 
             // collections
-            AppService.RegisterInstances(plugins);
+            Services.RegisterInstances(plugins);
 
             //IOC.Verify();
         }
 
-        static void InitPlugins(List<IPlugin> _Plugins)
+        static void InitializePlugins(List<IPlugin> _Plugins)
         {
             foreach (IPlugin _Plugin in _Plugins)
             {
                 try
                 {
-                    _Plugin.Init(AppService);
+                    _Plugin.Initialize(Services);
                 }
                 catch (NotImplementedException)
                 {
@@ -86,40 +90,50 @@ namespace Agent
             }
         }
 
-        static void LoadPlugins(out List<IPlugin> list)
+        static List<IPlugin?> ReadAndCreatePlugins()
         {
             // init list
-            list = new List<IPlugin>();
+            var list = new List<IPlugin?>();
 
-            var path = Env.GetString("_path");
+            var pluginsDirPath = PCManager.Combine("Plugins");
 
-            var isNullOrWhitespace = string.IsNullOrWhiteSpace(path);
-            var isDirectoryExist = Directory.Exists(path);
-
-            if (isNullOrWhitespace || !isDirectoryExist)
+            if (!Directory.Exists(pluginsDirPath))
             {
-                return;
+                return list;
             }
 
-            var dlls_path = Directory.EnumerateFiles(
-                path, "*Plugin.dll", SearchOption.AllDirectories).ToList();
+            var pluginsPaths = Directory.EnumerateFiles(
+                pluginsDirPath,
+                "*Plugin.dll",
+                SearchOption.AllDirectories
+            ).ToList();
 
-            if (dlls_path.Count == 0)
+            if (pluginsPaths.Count == 0)
             {
-                return;
+                return list;
             }
 
-            foreach (string dll_path in dlls_path)
-            {
-                var assembly = Assembly.LoadFrom(dll_path);
-                var typeName = assembly.ExportedTypes
-                    .Single(x => x.Name.Equals("DllMain")).FullName;
+            list = pluginsPaths
+                .Select(path =>
+                {
+                    return Assembly.LoadFrom(path).GetExportedTypes();
+                })
+                .Select(types =>
+                {
+                    return types.SingleOrDefault(type => type.Name == "DllMain");
+                })
+                .Select(type =>
+                {
+                    if (type == null)
+                    {
+                        return default;
+                    }
 
-                var instance = (IPlugin)assembly.CreateInstance(typeName!)!;
+                    return Activator.CreateInstance(type) as IPlugin;
+                })
+                .ToList();
 
-                // add to list
-                list.Add(instance);
-            }
+            return list;
         }
     }
 }

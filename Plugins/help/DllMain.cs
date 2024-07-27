@@ -1,16 +1,16 @@
 ﻿using Sdk.Base;
-using Sdk.Clients;
-using Sdk.Containers;
 using Sdk.Contracts;
+using Sdk.Dependencies;
 using Sdk.Models;
+using Sdk.Telegram;
 using System.Text;
 
 namespace Plugins.Help
 {
-    public class DllMain : PluginBase
+    public class DllMain : Plugin
     {
         private string text;
-        private ITGBotClient _telegram;
+        private IPCAssistant _telegram;
 
         public DllMain()
         {
@@ -23,15 +23,15 @@ namespace Plugins.Help
             this._telegram.SendTextBackToAdmin(this.text);
         }
 
-        public override void Dispatch(DispatchData data)
+        public override void Dispatch(ExecuteResult data)
         {
             throw new NotImplementedException();
         }
 
-        public override void Init(IDependencyService service)
+        public override void Initialize(IServiceLocator service)
         {
             StringBuilder builder = new();
-            this._telegram = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<IPCAssistant>();
             var _Plugins = service.ResolveInstances<IPlugin>();
 
             foreach (IPlugin _P in _Plugins)

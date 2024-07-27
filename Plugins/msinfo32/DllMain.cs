@@ -1,16 +1,16 @@
 ﻿using msinfo32.Components;
 using Sdk.Base;
-using Sdk.Clients;
-using Sdk.Containers;
 using Sdk.Contracts;
+using Sdk.Dependencies;
 using Sdk.Models;
+using Sdk.Telegram;
 using System.Text;
 
 namespace msinfo32
 {
-    public class DllMain : PluginBase
+    public class DllMain : Plugin
     {
-        private ITGBotClient _telegram;
+        private IPCAssistant _telegram;
         private IEnumerable<IComponent> _components;
 
         public DllMain()
@@ -31,14 +31,14 @@ namespace msinfo32
             this._telegram.SendTextBackToAdmin(sb.ToString());
         }
 
-        public override void Dispatch(DispatchData data)
+        public override void Dispatch(ExecuteResult data)
         {
             throw new NotImplementedException();
         }
 
-        public override void Init(IDependencyService service)
+        public override void Initialize(IServiceLocator service)
         {
-            this._telegram = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<IPCAssistant>();
             var cpuidHelper = service.ResolveInstance<ICpuidHelper>();
 
             var _devices = cpuidHelper.GetProcessors()

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Sdk
 {
-    public class PCManager
+    public static class PCManager
     {
         public static string Combine(string fileName)
         {

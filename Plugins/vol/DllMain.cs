@@ -1,16 +1,16 @@
 ﻿using CommandLine;
 using Sdk;
 using Sdk.Base;
-using Sdk.Clients;
-using Sdk.Containers;
+using Sdk.Dependencies;
 using Sdk.Models;
+using Sdk.Telegram;
 using System.Diagnostics;
 using System.Reflection;
 using vol;
 
 namespace Plugins.Vol
 {
-    public class DllMain : PluginBase
+    public class DllMain : Plugin
     {
         private class VolumeLevel
         {
@@ -18,13 +18,13 @@ namespace Plugins.Vol
             public int level { get; set; }
         }
 
-        private ITGBotClient _telegram;
+        private IPCAssistant _telegram;
         private readonly FileInfo _sndvol64;
 
         public DllMain()
         {
             base.Name = "/vol";
-            base.ArgsPattern = "(\\d{1,3})";
+            base.Args = "(\\d{1,3})";
             base.Description = "Adjust workstation's volume.";
 
             this._sndvol64 = new FileInfo(
@@ -38,7 +38,7 @@ namespace Plugins.Vol
             throw new NotImplementedException();
         }
 
-        public override void Dispatch(DispatchData data)
+        public override void Dispatch(ExecuteResult data)
         {
             if (!this._sndvol64.Exists)
             {
@@ -68,9 +68,9 @@ namespace Plugins.Vol
             }
         }
 
-        public override void Init(IDependencyService service)
+        public override void Initialize(IServiceLocator service)
         {
-            this._telegram = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<IPCAssistant>();
         }
     }
 }

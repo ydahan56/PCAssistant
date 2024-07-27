@@ -1,13 +1,13 @@
 ﻿using CommandLine;
 using Sdk.Base;
-using Sdk.Clients;
-using Sdk.Containers;
+using Sdk.Dependencies;
 using Sdk.Models;
+using Sdk.Telegram;
 using static display.Helpers.User32Helper;
 
 namespace Plugins.Display
 {
-    public class DllMain : PluginBase
+    public class DllMain : Plugin
     {
         private class DisplayArg
         {
@@ -15,13 +15,13 @@ namespace Plugins.Display
             public string State { get; set; }
         }
 
-        private ITGBotClient _telegram;
+        private IPCAssistant _telegram;
         private Dictionary<string, int> _dict;
 
         public DllMain()
         {
             this.Name = "/display";
-            this.ArgsPattern = "on|off";
+            this.Args = "on|off";
             this.Description = "Turn the display on or off.";
 
             this._dict = new Dictionary<string, int>()
@@ -36,7 +36,7 @@ namespace Plugins.Display
             throw new NotImplementedException();
         }
 
-        public override void Dispatch(DispatchData data)
+        public override void Dispatch(ExecuteResult data)
         {
             var args = Parser.Default.ParseArguments<DisplayArg>(data.Args).Value;
 
@@ -51,9 +51,9 @@ namespace Plugins.Display
             this._telegram.SendTextBackToAdmin($"error returned with exit code {error}");
         }
 
-        public override void Init(IDependencyService service)
+        public override void Initialize(IServiceLocator service)
         {
-            this._telegram = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<IPCAssistant>();
         }
     }
 }

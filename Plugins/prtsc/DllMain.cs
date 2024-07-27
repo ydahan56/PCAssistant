@@ -1,14 +1,14 @@
 ﻿using Sdk.Base;
-using Sdk.Clients;
-using Sdk.Containers;
+using Sdk.Dependencies;
 using Sdk.Models;
+using Sdk.Telegram;
 using System.Drawing.Imaging;
 
 namespace prtsc
 {
-    public class DllMain : PluginBase
+    public class DllMain : Plugin
     {
-        private ITGBotClient _telegram;
+        private IPCAssistant _telegram;
         private readonly ScreenUtility _screenUtility;
 
         public DllMain()
@@ -42,14 +42,14 @@ namespace prtsc
             }
         }
 
-        public override void Dispatch(DispatchData data)
+        public override void Dispatch(ExecuteResult data)
         {
             throw new NotImplementedException();
         }
 
-        public override void Init(IDependencyService service)
+        public override void Initialize(IServiceLocator service)
         {
-            this._telegram = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<IPCAssistant>();
         }
     }
 }

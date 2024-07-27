@@ -1,15 +1,15 @@
 ﻿using FluentScheduler;
 using New.Jobs;
 using Sdk.Base;
-using Sdk.Clients;
-using Sdk.Containers;
+using Sdk.Dependencies;
 using Sdk.Models;
+using Sdk.Telegram;
 
 namespace New
 {
-    public class DllMain : PluginBase
+    public class DllMain : Plugin
     {
-        private ITGBotClient _telegram;
+        private IPCAssistant _telegram;
 
         public DllMain()
         {
@@ -29,14 +29,14 @@ namespace New
             JobManager.Initialize(_Job);
         }
 
-        public override void Dispatch(DispatchData data)
+        public override void Dispatch(ExecuteResult data)
         {
             throw new NotImplementedException();
         }
 
-        public override void Init(IDependencyService service)
+        public override void Initialize(IServiceLocator service)
         {
-            this._telegram = service.ResolveInstance<ITGBotClient>();
+            this._telegram = service.ResolveInstance<IPCAssistant>();
         }
     }
 }
