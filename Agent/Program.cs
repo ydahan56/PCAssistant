@@ -33,18 +33,31 @@ namespace Agent
                 .Select(id => Convert.ToInt64(id))
                 .ToList();
 
+            // init cpuidsdk
+            Cpuid64.Instance.InitSDK(PCManager.GetAppDirectory());
+
+            // init telegram
             var telegram = new AssistantBot(token, whitelist);
+
+            // init cpuid helper
             var cpuidHelper = new CpuidHelper();
 
+            // read plugins
             var plugins = ReadAndCreatePlugins();
+
+            // register components
             RegisterComponents(telegram, cpuidHelper, plugins);
+
+            // initialize plugins
             InitializePlugins(plugins);
 
+            // start application's message loop
             Application.Run(new Main(telegram));
 
+            // cleanup
             telegram.Cancel();
             JobManager.Stop();
-            Cpuid64.Instance.Sdk64.UninitSDK();
+            Cpuid64.Instance.Dispose();
         }
 
         static void OnApplicationEvent(ApplicationEvent eventType)

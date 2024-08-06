@@ -2,6 +2,7 @@
 using FluentScheduler;
 using Sdk.Telegram;
 using Nito.AsyncEx;
+using Sdk;
 using Telegram.Bot.Types;
 
 namespace Agent
@@ -13,7 +14,7 @@ namespace Agent
             // init tray
             var tray = new NotifyIcon()
             {
-                Icon = new Icon(".\\icon.ico"),
+                Icon = new Icon(PCManager.Combine("icon.ico")),
                 Text = "PCAssistant",
                 Visible = true
             };
@@ -22,7 +23,7 @@ namespace Agent
             var startup = new Startup(client, tray);
 
             // init startup and refresh job
-            JobManager.Initialize(startup, Cpuid64.Instance);
+            JobManager.Initialize(startup, Cpuid64.Instance.GetRefreshJob());
         }
     }
 

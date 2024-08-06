@@ -16,6 +16,9 @@ namespace Agent
 {
     public class AgentUpdateHandler : IUpdateHandler
     {
+        private Update _update;
+        private ITelegramBotClient _client;
+
         private readonly NotifyIcon _tray;
         private readonly IPCAssistant _assistant;
 
@@ -47,32 +50,35 @@ namespace Agent
 
         public async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken cancellationToken)
         {
-            var message = update.Message;
+            this._update = update;
+            this._client = client;
 
-            //return; // debug purpose
-
-            if (!this._whitelist.Contains(message.From.Id))
+            if (!this._whitelist.Contains(update.Message.From.Id))
             {
-                await client.SendTextMessageAsync(message.Chat.Id, "Unauthorized.");
+                await client.SendTextMessageAsync(update.Message.Chat.Id, "Unauthorized.");
 
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(message.Text))
+            if (string.IsNullOrWhiteSpace(update.Message.Text))
             {
-                await client.SendTextMessageAsync(message.Chat.Id, "Unrecognized command.", replyToMessageId: message.MessageId);
+                await client.SendTextMessageAsync(
+                    update.Message.Chat.Id, 
+                    "Unrecognized command.", 
+                    replyToMessageId: update.Message.MessageId
+                );
                 
                 return;
             }
 
-            var tipText = $"Received {message.Text} from {message.From.Username}.";
+            var tipText = $"Received {update.Message.Text} from {update.Message.From.Username}.";
 
             // show balloon tip to the user
             this._tray.ShowBalloonTip(1750, this._tray.Text, tipText, ToolTipIcon.Info);
 
 
             // read args from user
-            var args = message.Text.SplitArgs();
+            var args = update.Message.Text.SplitArgs();
 
             // search for command
             var worker = this._commands.SingleOrDefault(c => c.TryGetPlugin(args).success);
@@ -80,7 +86,7 @@ namespace Agent
             // notify user incase no command was found
             if (worker == null)
             {
-                await client.SendTextMessageAsync(message.Chat.Id, "No such command.");
+                await client.SendTextMessageAsync(update.Message.Chat.Id, "No such command.");
 
                 return;
             }
@@ -98,7 +104,7 @@ namespace Agent
             this._tray.ShowBalloonTip(1750, this._tray.Text, result.ErrorMessage, ToolTipIcon.Info);
 
             // send result to the user
-            await this._assistant.SendTextToWhitelistAsync(result.ErrorMessage);
+            await this._client.SendTextMessageAsync(this._update.Message.Chat.Id, result.ErrorMessage);
         }
     }
 }

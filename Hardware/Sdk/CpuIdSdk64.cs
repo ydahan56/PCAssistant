@@ -307,9 +307,9 @@ namespace Hardware.Sdk
             return result;
         }
 
-        public CpuIdSdk64(string dllDirPath, out bool initSuccess)
+        public CpuIdSdk64(string szDllPath, string szDllFilename, out bool status)
         {
-            initSuccess = InitSDK_Quick(dllDirPath);
+            status = this.InitSDK_Quick(szDllPath, szDllFilename);
         }
 
         // Token: 0x06000052 RID: 82 RVA: 0x00002530 File Offset: 0x00000730
@@ -517,7 +517,7 @@ namespace Hardware.Sdk
             }
         }
 
-        public bool InitSDK_Quick(string dllDirPath)
+        public bool InitSDK_Quick(string szDllPath, string szDllFilename)
         {
             this.CreateInstance();
 
@@ -534,7 +534,7 @@ namespace Hardware.Sdk
             config ^= CPUIDSDK_CONFIG_USE_SOFTWARE;
             config ^= CPUIDSDK_CONFIG_USE_SPD;
 
-            return this.Init(dllDirPath, "cpuidsdk64.dll", config, ref num, ref num2);
+            return this.Init(szDllPath, szDllFilename, config, ref num, ref num2);
         }
 
         // Token: 0x06000069 RID: 105 RVA: 0x0000277C File Offset: 0x0000097C
@@ -546,8 +546,20 @@ namespace Hardware.Sdk
                 IntPtr intPtr = CPUIDSDK_fp_QueryInterface(1423354285u);
                 if (intPtr != IntPtr.Zero)
                 {
-                    CPUIDSDK_fp_Init cpuidsdk_fp_Init = (CPUIDSDK_fp_Init)Marshal.GetDelegateForFunctionPointer(intPtr, typeof(CPUIDSDK_fp_Init));
-                    int num = cpuidsdk_fp_Init(this.objptr, _szDllPath, _szDllFilename, (int)_config_flag, ref _errorcode, ref _extended_errorcode);
+                    CPUIDSDK_fp_Init cpuidsdk_fp_Init = (CPUIDSDK_fp_Init)Marshal.GetDelegateForFunctionPointer(
+                        intPtr, 
+                        typeof(CPUIDSDK_fp_Init)
+                    );
+                    
+                    int num = cpuidsdk_fp_Init(
+                        this.objptr,
+                        _szDllPath,
+                        _szDllFilename,
+                        (int)_config_flag,
+                        ref _errorcode, 
+                        ref _extended_errorcode
+                    );
+
                     if (num == 1)
                     {
                         result = true;

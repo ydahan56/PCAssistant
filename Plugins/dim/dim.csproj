@@ -5,7 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>$(MSBuildProjectName).Plugin</AssemblyName>
-    <BaseOutputPath>$(SolutionDir)\Agent\bin\Debug\Plugins\dim</BaseOutputPath>
+    <BaseOutputPath>$(SolutionDir)\Agent\bin\Debug\net8.0-windows\Plugins\dim</BaseOutputPath>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
