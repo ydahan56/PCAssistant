@@ -1,8 +1,8 @@
-﻿using Hardware;
-using FluentScheduler;
-using Sdk.Telegram;
+﻿using FluentScheduler;
+using Hardware;
 using Nito.AsyncEx;
 using Sdk;
+using Sdk.Telegram;
 using Telegram.Bot.Types;
 
 namespace Agent
@@ -53,7 +53,7 @@ namespace Agent
             AsyncContext.Run(async () =>
             {
                 User user = await this._client.GetMeAsync();
-                Program.UIThread.Invoke(() => this._tray.Text += $" - {user.Username}");
+                SynchronizationContext.Current.Post((o) => this._tray.Text += $" - {user.Username}", null);
             });
         }
 
@@ -62,7 +62,7 @@ namespace Agent
             AsyncContext.Run(async () =>
             {
                 string trayTitle = "";
-                Program.UIThread.Invoke(() => trayTitle = this._tray.Text);
+                SynchronizationContext.Current.Post((o) => trayTitle = this._tray.Text, null);
                 await this._client.SendTextToWhitelistAsync($"*{trayTitle}*: I'm Up.");
             });
         }

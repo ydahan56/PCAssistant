@@ -1,36 +1,38 @@
-using Hardware;
+using Agent.Helpers;
 using DotNetEnv;
 using FluentScheduler;
-using Agent.Helpers;
-using Sdk.Telegram;
+using Hardware;
+using Sdk;
 using Sdk.Containers;
 using Sdk.Contracts;
+using Sdk.Dependencies;
 using Sdk.Hub;
+using Sdk.Telegram;
 using SimpleInjector;
 using System.Reflection;
-using Sdk.Telegram;
-using Sdk.Dependencies;
-using Sdk;
+using Telegram.Bot.Types;
 
 namespace Agent
 {
     internal static class Program
     {
         public static IServiceLocator Services { get; private set; }
-        public static Control UIThread { get; set; }
 
         [STAThread]
         static void Main()
         {
             Env.Load();
 
-            EventAggregator.Instance.MessageHub.Subscribe<ApplicationEvent>(OnApplicationEvent);
+            EventAggregator.Instance.MessageHub
+                .Subscribe<ApplicationEvent>(OnApplicationEvent);
 
             Services = new DependencyLocator(new Container());
 
             var token = Env.GetString("token");
             var whitelist = Env.GetString("whitelist")
+                .Split(",")
                 .Select(id => Convert.ToInt64(id))
+                .Select(id => new ChatId(id))
                 .ToList();
 
             // init cpuidsdk
@@ -74,27 +76,27 @@ namespace Agent
         }
 
         static void RegisterComponents(
-            IPCAssistant client,
-            ICpuidHelper cpuidHelper,
-            IEnumerable<IPlugin> plugins)
+            IPCAssistant assistant,
+            ICpuidHelper cpuid,
+            List<IPlugin> items)
         {
             // instances
-            Services.RegisterInstance(client);
-            Services.RegisterInstance(cpuidHelper);
+            Services.RegisterInstance(assistant);
+            Services.RegisterInstance(cpuid);
 
             // collections
-            Services.RegisterInstances(plugins);
+            Services.RegisterInstances(items);
 
             //IOC.Verify();
         }
 
-        static void InitializePlugins(List<IPlugin> _Plugins)
+        static void InitializePlugins(List<IPlugin> items)
         {
-            foreach (IPlugin _Plugin in _Plugins)
+            foreach (IPlugin item in items)
             {
                 try
                 {
-                    _Plugin.Initialize(Services);
+                    item.Initialize(Services);
                 }
                 catch (NotImplementedException)
                 {

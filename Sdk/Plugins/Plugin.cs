@@ -9,8 +9,6 @@ namespace Sdk.Base
     {
         protected Action<ExecuteResult> ExecuteResultCallback;
 
-        public abstract (bool success, Plugin? result) TryGetPlugin(string[] args);
-
         public abstract void Execute();
 
         public virtual void Initialize(IServiceLocator services) // todo - remove?

@@ -547,16 +547,16 @@ namespace Hardware.Sdk
                 if (intPtr != IntPtr.Zero)
                 {
                     CPUIDSDK_fp_Init cpuidsdk_fp_Init = (CPUIDSDK_fp_Init)Marshal.GetDelegateForFunctionPointer(
-                        intPtr, 
+                        intPtr,
                         typeof(CPUIDSDK_fp_Init)
                     );
-                    
+
                     int num = cpuidsdk_fp_Init(
                         this.objptr,
                         _szDllPath,
                         _szDllFilename,
                         (int)_config_flag,
-                        ref _errorcode, 
+                        ref _errorcode,
                         ref _extended_errorcode
                     );
 

@@ -1,6 +1,5 @@
-﻿using Hardware.Sdk;
-using FluentScheduler;
-using Sdk;
+﻿using FluentScheduler;
+using Hardware.Sdk;
 
 namespace Hardware
 {

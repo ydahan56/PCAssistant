@@ -1,13 +1,11 @@
 ﻿using CommandLine;
 using DotNetEnv;
 using FluentScheduler;
-using Nito.AsyncEx;
 using Sdk;
 using Sdk.Base;
 using Sdk.Contracts;
 using Sdk.Models;
 using Sdk.Telegram;
-using System.Web;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -35,7 +33,8 @@ namespace Agent
                 .Select(id => Convert.ToInt64(id))
                 .ToList();
 
-            this._commands = Program.Services.ResolveInstances<IPlugin>()
+            this._commands = Program.Services
+                .ResolveInstances<IPlugin>()
                 .Cast<Plugin>()
                 .ToList();
         }
@@ -43,7 +42,7 @@ namespace Agent
         public async Task HandlePollingErrorAsync(ITelegramBotClient client, Exception exception, CancellationToken cancellationToken)
         {
             await System.IO.File.AppendAllTextAsync(
-                PCManager.Combine("log.txt"), 
+                PCManager.Combine("log.txt"),
                 exception.ToString() + Environment.NewLine
             );
         }
@@ -63,11 +62,11 @@ namespace Agent
             if (string.IsNullOrWhiteSpace(update.Message.Text))
             {
                 await client.SendTextMessageAsync(
-                    update.Message.Chat.Id, 
-                    "Unrecognized command.", 
+                    update.Message.Chat.Id,
+                    "Unrecognized command.",
                     replyToMessageId: update.Message.MessageId
                 );
-                
+
                 return;
             }
 
@@ -76,26 +75,22 @@ namespace Agent
             // show balloon tip to the user
             this._tray.ShowBalloonTip(1750, this._tray.Text, tipText, ToolTipIcon.Info);
 
-
             // read args from user
             var args = update.Message.Text.SplitArgs();
 
-            // search for command
-            var worker = this._commands.SingleOrDefault(c => c.TryGetPlugin(args).success);
-            
-            // notify user incase no command was found
-            if (worker == null)
-            {
-                await client.SendTextMessageAsync(update.Message.Chat.Id, "No such command.");
+            Parser.Default.ParseArguments(args, this._commands.Select(x => x.GetType()).ToArray())
+                .WithParsed<Plugin>((o) =>
+                {
+                    // set callback for the command
+                    o.SetExecuteResultCallback(this.ExecuteResultCallback);
 
-                return;
-            }
-
-            // set callback for the command
-            worker.SetExecuteResultCallback(this.ExecuteResultCallback);
-
-            // execute command on a separate thread, "fire and forget"
-            JobManager.Initialize(worker);
+                    // execute command on a separate thread, "fire and forget"
+                    JobManager.Initialize(o);
+                })
+                .WithNotParsed((o) =>
+                {
+                    Console.WriteLine("Error");
+                });
         }
 
         private async void ExecuteResultCallback(ExecuteResult result)
