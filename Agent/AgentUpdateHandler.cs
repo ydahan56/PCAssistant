@@ -21,7 +21,7 @@ namespace Agent
         private readonly IPCAssistant _assistant;
 
         private readonly List<long> _whitelist;
-        private readonly List<Plugin> _commands;
+        private readonly Type[] _commands;
 
         public AgentUpdateHandler(NotifyIcon tray, IPCAssistant assistant)
         {
@@ -35,8 +35,9 @@ namespace Agent
 
             this._commands = Program.Services
                 .ResolveInstances<IPlugin>()
-                .Cast<Plugin>()
-                .ToList();
+               // .Cast<Plugin>()
+                .Select(x => x.GetType())
+                .ToArray();
         }
 
         public async Task HandlePollingErrorAsync(ITelegramBotClient client, Exception exception, CancellationToken cancellationToken)
@@ -78,7 +79,7 @@ namespace Agent
             // read args from user
             var args = update.Message.Text.SplitArgs();
 
-            Parser.Default.ParseArguments(args, this._commands.Select(x => x.GetType()).ToArray())
+            Parser.Default.ParseArguments(args, this._commands)
                 .WithParsed<Plugin>((o) =>
                 {
                     // set callback for the command

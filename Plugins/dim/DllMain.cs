@@ -9,10 +9,11 @@ using System.Reflection;
 
 namespace Plugins.Dim
 {
-    [Verb("/dim", HelpText = "Adjust Workstation Brightness.")]
+    [Verb("/brightness", HelpText = "Adjust Workstation Brightness.")]
     public class DllMain : Plugin
     {
-        [Value(0, Required = true, HelpText = "Brightness Level (1-100)")]
+        //  [Value(0, Required = true, HelpText = "Brightness Level (1-100)")]
+        [Option("value", Required = true, HelpText = "Brightness Level (1-100)")]
         public int BrightnessLevel { get; set; }
 
         public DllMain()

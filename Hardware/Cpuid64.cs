@@ -18,7 +18,7 @@ namespace Hardware
 
             public void Execute()
             {
-                this._cpuid64.RefreshInformation();
+                //this._cpuid64.RefreshInformation();
             }
         }
 
