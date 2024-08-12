@@ -67,8 +67,8 @@ namespace Hardware
                 out bool success
             );
 
-            if (!success)
-                throw new Exception("CpuIdSdk64 failed to initialize.");
+            //if (!success)
+            //    throw new Exception("CpuIdSdk64 failed to initialize.");
         }
 
         public void Dispose()

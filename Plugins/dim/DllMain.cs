@@ -12,13 +12,13 @@ namespace Plugins.Dim
     [Verb("/brightness", HelpText = "Adjust Workstation Brightness.")]
     public class DllMain : Plugin
     {
-        //  [Value(0, Required = true, HelpText = "Brightness Level (1-100)")]
+      
         [Option("value", Required = true, HelpText = "Brightness Level (1-100)")]
         public int BrightnessLevel { get; set; }
 
         public DllMain()
         {
-            this.Schedule(this).ToRunNow();
+            // this.Schedule(this).ToRunNow();
         }
 
         public override void Execute()

@@ -85,6 +85,9 @@ namespace Agent
                     // set callback for the command
                     o.SetExecuteResultCallback(this.ExecuteResultCallback);
 
+                    // schedule the job to run
+                    o.Schedule();
+
                     // execute command on a separate thread, "fire and forget"
                     JobManager.Initialize(o);
                 })
