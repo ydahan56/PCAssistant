@@ -31,7 +31,7 @@ namespace Sdk.Base
             this.ExecuteResultCallback = callback;
         }
 
-        public void Schedule()
+        public void SetExecutionSchedule()
         {
             // Hours or Minutes could be "00", still affects the same
             if (this.Hours > 0 || this.Minutes > 0)

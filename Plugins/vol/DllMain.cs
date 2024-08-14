@@ -10,67 +10,66 @@ using vol;
 
 namespace Plugins.Vol
 {
+    [Verb("/volume", HelpText = "Adjust the volume level")]
     public class DllMain : Plugin
     {
-        private class VolumeLevel
-        {
-            [Value(0)]
-            public int level { get; set; }
-        }
+        private readonly FileInfo _utility;
 
-        private IPCAssistant _telegram;
-        private readonly FileInfo _sndvol64;
+        [Option("value", Required = true, HelpText = "The volume level (1-100)")]
+        public int VolumeValue { get; set; }
 
         public DllMain()
         {
-            base.Name = "/vol";
-            base.Args = "(\\d{1,3})";
-            base.Description = "Adjust workstation's volume.";
-
-            this._sndvol64 = new FileInfo(
-                PCManager.CombineExternal(
-                    Assembly.GetExecutingAssembly(), "sndvol64.exe")
+            this._utility = new FileInfo(
+                PCManager.CombineAssembly(
+                    Assembly.GetExecutingAssembly(), "SoundVolumeView.exe")
             );
         }
 
-        public override void Dispatch()
+        public override void Execute()
         {
-            throw new NotImplementedException();
-        }
-
-        public override void Dispatch(ExecuteResult data)
-        {
-            if (!this._sndvol64.Exists)
+            if (!this._utility.Exists)
             {
-                this._telegram.SendTextBackToAdmin($"{this._sndvol64.Name} does not exists");
+                // return answer back to caller
+                this.ExecuteResultCallback(
+                    new ExecuteResult()
+                    {
+                        Success = false,
+                        ErrorMessage = $"{this._utility.Name} does not exists"
+                    }
+                );
+
+                // exit
                 return;
             }
 
-            Parser.Default.ParseArguments<VolumeLevel>(data.Args).WithParsed(this.SetVolume);
-        }
-
-        private void SetVolume(VolumeLevel arg)
-        {
-            if (arg.level < 1 || arg.level > 100)
+            if (VolumeValue < 1 || VolumeValue > 100)
             {
-                this._telegram.SendTextBackToAdmin("Volume has to be between 1 to 100.");
+                // return answer back to caller
+                this.ExecuteResultCallback(
+                    new ExecuteResult()
+                    {
+                        Success = false,
+                        ErrorMessage = $"Value cannot be {this.VolumeValue}, must be between 1-100"
+                    }
+                );
+
+                // exit
                 return;
             }
 
-            var success = new SndVol64()
-                .SetPath(this._sndvol64.FullName)
-                .SetVolume(arg.level)
+            var success = VolumeUtilities
+                .Create(this._utility.FullName)
+                .SetVolume(this.VolumeValue)
                 .Execute();
 
-            if (success)
-            {
-                this._telegram.SendTextBackToAdmin($"Volume successfully set to *{arg.level}%*");
-            }
-        }
-
-        public override void Initialize(IServiceLocator service)
-        {
-            this._telegram = service.ResolveInstance<IPCAssistant>();
+            this.ExecuteResultCallback(
+                new ExecuteResult()
+                {
+                    Success = success,
+                    ErrorMessage = $"Volume has been set to value {this.VolumeValue}"
+                }
+            );
         }
     }
 }

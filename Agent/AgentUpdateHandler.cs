@@ -35,7 +35,6 @@ namespace Agent
 
             this._commands = Program.Services
                 .ResolveInstances<IPlugin>()
-               // .Cast<Plugin>()
                 .Select(x => x.GetType())
                 .ToArray();
         }
@@ -86,7 +85,7 @@ namespace Agent
                     o.SetExecuteResultCallback(this.ExecuteResultCallback);
 
                     // schedule the job to run
-                    o.Schedule();
+                    o.SetExecutionSchedule();
 
                     // execute command on a separate thread, "fire and forget"
                     JobManager.Initialize(o);

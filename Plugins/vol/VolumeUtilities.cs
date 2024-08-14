@@ -7,25 +7,25 @@ using System.Threading.Tasks;
 
 namespace vol
 {
-    public class SndVol64
+    public class VolumeUtilities
     {
         private string _filePath;
         private readonly List<string> _argsList;
 
-        public SndVol64()
+        private VolumeUtilities(string filePath)
         {
+            this._filePath = filePath;
             this._argsList = new List<string>();
         }
 
-        public SndVol64 SetPath(string filePath)
+        public static VolumeUtilities Create(string filePath)
         {
-            this._filePath = filePath;
-            return this;
+            return new VolumeUtilities(filePath);
         }
 
-        public SndVol64 SetVolume(int volumeLevel)
+        public VolumeUtilities SetVolume(int value)
         {
-            this._argsList.Add($"/SetVolume \"Speakers\" {volumeLevel}");
+            this._argsList.Add($"/SetVolume \"Speakers\" {value}");
             return this;
         }
 

@@ -14,7 +14,7 @@ namespace Plugins.Dim
     {
       
         [Option("value", Required = true, HelpText = "Brightness Level (1-100)")]
-        public int BrightnessLevel { get; set; }
+        public int BrightnessValue { get; set; }
 
         public DllMain()
         {
@@ -23,13 +23,16 @@ namespace Plugins.Dim
 
         public override void Execute()
         {
-            var scriptPath = PCManager.CombineExternal(Assembly.GetExecutingAssembly(), "execute.ps1");
+            var scriptPath = PCManager.CombineAssembly(
+                Assembly.GetExecutingAssembly(), 
+                "execute.ps1"
+            );
 
             var result = new PowerShellBuilder()
                 .BypassExecutionPolicy()
                 .SetWindowStyle(PSWindowStyle.Hidden)
                 .SetFileScriptPath(scriptPath)
-                .SetArgument(this.BrightnessLevel)
+                .SetArgument(this.BrightnessValue)
                 .ExecuteScript();
 
             this.ExecuteResultCallback?.Invoke(

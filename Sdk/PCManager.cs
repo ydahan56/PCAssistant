@@ -14,7 +14,7 @@ namespace Sdk
             return AppDomain.CurrentDomain.BaseDirectory;
         }
 
-        public static string CombineExternal(Assembly assembly, string fileName)
+        public static string CombineAssembly(Assembly assembly, string fileName)
         {
             return Path.Combine(Path.GetDirectoryName(assembly.Location), fileName);
         }
