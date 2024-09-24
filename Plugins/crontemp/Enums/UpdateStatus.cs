@@ -1,6 +1,6 @@
 ﻿namespace crontemp.Enums
 {
-    public enum JobUpdateState
+    public enum UpdateStatus
     {
         Send,
         Append,

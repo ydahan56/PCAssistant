@@ -11,13 +11,14 @@ namespace crontemp.Jobs
         private readonly DateTime deadline;
 
         private readonly IEnumerable<IDevice> devices;
-        private readonly Action<JobUpdateState, UpdateArgs?> update;
+        private readonly Action<UpdateStatus, UpdateArgs?> update;
 
         public CronTempJob(
             IEnumerable<IDevice> devices,
-            Action<JobUpdateState, UpdateArgs?> update,
-            double total,
-            int timeout)
+            Action<UpdateStatus, UpdateArgs?> update,
+            int total,
+            int timeout
+            )
         {
             this.devices = devices;
             this.update = update;
@@ -30,7 +31,7 @@ namespace crontemp.Jobs
         {
             if (DateTime.Now >= this.deadline)
             {
-                this.update(JobUpdateState.Elapsed, null);
+                this.update(UpdateStatus.Elapsed, null);
                 return;
             }
 
@@ -44,10 +45,10 @@ namespace crontemp.Jobs
                     Temperature = sensor.Value
                 };
 
-                this.update(JobUpdateState.Append, args);
+                this.update(UpdateStatus.Append, args);
             }
 
-            this.update(JobUpdateState.Send, null);
+            this.update(UpdateStatus.Send, null);
         }
     }
 }

@@ -7,65 +7,58 @@ using System.Diagnostics;
 
 namespace kill
 {
+    [Verb("/kill", HelpText = "Kill a Process by its ID")]
     public class DllMain : Plugin
     {
-        [Verb("/kill")]
-        public class Args
-        {
-            [Value(0)]
-            public int PID { get; set; }
-        }
 
-        private IPCAssistant _telegram;
+        [Option("pid", Required = true, HelpText = "The Process ID, in decimal")]
+        public int PID { get; set; }
 
-        public DllMain()
-        {
-            this.Name = "/kill";
-            this.Args = "(\\d+)";
-            this.Description = "Kill a task by its id.";
-        }
-
-        public override void Dispatch()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Dispatch(ExecuteResult data)
-        {
-            Parser.Default.ParseArguments<Args>(data.Args).WithParsed(this.KillEvent);
-        }
-
-        public override void Initialize(IServiceLocator service)
-        {
-            this._telegram = service.ResolveInstance<IPCAssistant>();
-        }
-
-        private void KillEvent(Args args)
+        public override void Execute()
         {
             Process target;
-            string text;
+
+            var text = "";
+            var success = false;
 
             try
             {
-                target = Process.GetProcessById(args.PID);
+                target = Process.GetProcessById(this.PID);
             }
             catch (Exception e)
             {
-                this._telegram.SendTextBackToAdmin(e.Message);
+                this.ExecuteResultCallback(
+                    new ExecuteResult()
+                    {
+                        ErrorMessage = e.Message,
+                        Success = success
+                    }
+                );
+
+                // exception occured, exit...
                 return;
             }
 
             try
             {
                 target.Kill();
-                text = $"{target.ProcessName} killed.";
+
+                success = true;
+                text = $"Process with name {target.ProcessName} terminated";
             }
             catch (Exception e)
             {
+                success = false;
                 text = e.Message;
             }
 
-            this._telegram.SendTextBackToAdmin(text);
+            this.ExecuteResultCallback(
+                new ExecuteResult()
+                { 
+                    ErrorMessage = text, 
+                    Success = success 
+                }
+            );
         }
     }
 }

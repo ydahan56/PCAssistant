@@ -1,5 +1,6 @@
 ﻿using FluentScheduler;
 using Hardware.Sdk;
+using System.Text;
 
 namespace Hardware
 {
@@ -67,8 +68,12 @@ namespace Hardware
                 out bool success
             );
 
+            var sb = new StringBuilder();
+            sb.AppendLine("CPUID failed to initialize.");
+            sb.AppendLine("Check AV settings preventing the driver from loading");
+
             //if (!success)
-            //    throw new Exception("CpuIdSdk64 failed to initialize.");
+            //    throw new Exception(sb.ToString());
         }
 
         public void Dispose()

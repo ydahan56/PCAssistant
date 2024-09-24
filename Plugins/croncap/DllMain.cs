@@ -6,7 +6,7 @@ using Telebot.Capture;
 using Telegram.Bot;
 using Telegram.Bot.Types.InputFiles;
 
-namespace Plugins.CapTime
+namespace croncap
 {
     public class DllMain : IModule, IJobStatus
     {

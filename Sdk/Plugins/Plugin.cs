@@ -8,6 +8,12 @@ namespace Sdk.Base
 {
     public abstract class Plugin : Registry, IPlugin, IJob
     {
+        //public string Name { get; set; }
+        //public string Description { get; set; }
+
+        // todo - before declaring properties, check if you can use nuget annotators
+
+
         protected Action<ExecuteResult> ExecuteResultCallback;
 
         [Option("hours", HelpText = "Hours till command execution.")]

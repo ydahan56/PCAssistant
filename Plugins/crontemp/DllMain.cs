@@ -10,144 +10,184 @@ using Sdk.Devices;
 using Sdk.Extensions;
 using Sdk.Models;
 using Sdk.Telegram;
+using System.Resources;
 using System.Text;
 
 namespace crontemp
 {
+    [Verb("crontemp", HelpText = "Monitor the temperature of the workstation")]
     public class DllMain : Plugin
     {
-        [Verb("off")]
-        public class Disable
-        {
-            //[Value(0)]
-            //public string Value { get; set; }
-        }
+        [Option("total", HelpText = "The total amount of time in seconds to run the cron")]
+        public int Total { get; set; }
 
-        [Verb("/crontemp", isDefault: true)]
-        public class Enable
-        {
-            [Value(0)]
-            public double Total { get; set; }
+        [Option("timeout", HelpText = "The timeout in seconds between each execution")]
+        public int Timeout { get; set; }
 
-            [Value(1)]
-            public int Timeout { get; set; }
-        }
+        [Option("stop", HelpText = "Sends a signal to cancel execution")]
+        public bool Cancel { get; set; }
 
-        private IPCAssistant _telegram;
+
+        private readonly string _name;
         private IEnumerable<IDevice> _devices;
 
-        private JobState state;
-        private readonly string jobName;
-
-        private readonly StringBuilder sb;
-        private readonly Parser parser;
-
-        private const string SUCCESS_MESSAGE = "Temperature monitor has been scheduled to run {0} sec for every {1} sec.";
-        private const string APPEND_MESSAGE = "*{0}*: {1}°C";
+        private readonly ResourceManager _rm;
 
         public DllMain()
         {
-            base.Name = "/crontemp";
-            base.Args = "(\\d+) (\\d+)|off";
-            base.Description = "Schedules temperature monitor.";
+            this._name = nameof(CronTempJob);
+            this._rm = new ResourceManager(
+                "crontemp.Resource1", 
+                this.GetType().Assembly
+            );
+        }
 
-            this.sb = new StringBuilder();
-            this.parser = new Parser(with =>
+        // boolean flag to determine whether a Job exists
+        private bool IsCronJobActive => this._cronJobId > 0;
+
+        // this is used to store the ID of existing Job
+        private int _cronJobId;
+
+        private void InternalCancelJob()
+        {
+            // remove Job
+            JobManager.RemoveJob(this._name);
+
+            // update client
+            this.ExecuteResultCallback(
+                new ExecuteResult()
+                {
+                    ErrorMessage = $"crontemp Job with id {this._cronJobId} has been cancelled.",
+                    Success = true
+                }
+            );
+
+            // reset Job id
+            this._cronJobId = 0;
+        }
+
+        public override void Execute()
+        {
+            if (this.Cancel)
             {
-                with.EnableDashDash = false;
-            });
+                if (this.IsCronJobActive)
+                {
+                    // perform cancellation
+                    this.InternalCancelJob();
+                }
 
-            // init default values
-            this.state = JobState.Stopped;
-            this.jobName = nameof(CronTempJob);
-        }
-
-        public override void Dispatch()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Dispatch(ExecuteResult data)
-        {
-            this.parser.ParseArguments<Enable, Disable>(data.Args)
-                .WithParsed<Enable>(this.Enable_Event)
-                .WithParsed<Disable>(this.Disable_Event);
-        }
-
-        private void Disable_Event(Disable e)
-        {
-            if (this.state == JobState.Started)
-            {
-                JobManager.RemoveJob(this.jobName);
-                this.state = JobState.Stopped;
-                this._telegram.SendTextBackToAdmin($"{base.Name} has been cancelled.");
+                // we're done processing cancellation
                 return;
             }
-        }
 
-        private void Enable_Event(Enable e)
-        {
-            if (this.state == JobState.Started)
+            // check if an existing Job is already running
+            if (this.IsCronJobActive)
             {
-                this._telegram.SendTextBackToAdmin($"{base.Name} is already running.");
+                this.ExecuteResultCallback(
+                    new ExecuteResult()
+                    {
+                        ErrorMessage = $"crontemp Job with id {this._cronJobId} is already running.",
+                        Success = true
+                    }
+                );
+
                 return;
             }
 
             // create new job
-            var _cron_job = new CronTempJob(
+            var _cronJob = new CronTempJob(
                 this._devices,
                 this.OnJobUpdate,
-                e.Total,
-                e.Timeout
+                this.Total,
+                this.Timeout
             );
 
-            // init job
-            JobManager.Initialize(_cron_job);
+            // update Job's ID
+            this._cronJobId = _cronJob.GetHashCode();
 
-            // set state
-            this.state = JobState.Started;
+            // fire Job
+            JobManager.Initialize(_cronJob);
 
-            // report to client
-            this._telegram.SendTextBackToAdmin(string.Format(SUCCESS_MESSAGE, e.Total, e.Timeout));
+            // update client
+            this.ExecuteResultCallback(
+                new ExecuteResult()
+                {
+                    ErrorMessage = string.Format(
+                        this._rm.GetString("SUCCESS_ERRORMESSAGE"),
+                        this.Total,
+                        this.Timeout
+                    ),
+                    Success = true
+                }
+            );
+
         }
 
-        private void OnJobUpdate(JobUpdateState status, UpdateArgs? args)
+        private StringBuilder updateMessageBuilder = new StringBuilder();
+
+        private void OnJobUpdate(UpdateStatus updateStatus, UpdateArgs? args)
         {
-            if (status == JobUpdateState.Elapsed)
+            if (updateStatus == UpdateStatus.Elapsed)
             {
-                JobManager.RemoveJob(this.jobName);
-                this.state = JobState.Stopped;
-                this._telegram.SendTextBackToAdmin($"{base.Name} has elapsed.");
+                // perform cancellation
+                this.InternalCancelJob();
+
+                // exit
                 return;
             }
 
-            if (status == JobUpdateState.Append)
+            if (updateStatus == UpdateStatus.Append)
             {
-                this.sb.AppendLine(string.Format(APPEND_MESSAGE, args.DeviceName, args.Temperature));
+                // perform append
+                this.updateMessageBuilder.AppendLine(
+                    string.Format(
+                        this._rm.GetString("UPDATE_ERRORMESSAGE"),
+                        args.DeviceName,
+                        args.Temperature
+                    )
+                );
+
+                // exit
                 return;
             }
 
-            if (status == JobUpdateState.Send)
+            if (updateStatus == UpdateStatus.Send)
             {
-                this.sb.AppendLine("\nFrom *Telebot*");
-                this._telegram.SendTextBackToAdmin(this.sb.ToString());
+                // add finalize text
+                this.updateMessageBuilder.AppendLine("\nFrom *Telebot*");
 
-                this.sb.Clear();
+                // update client
+                this.ExecuteResultCallback(
+                    new ExecuteResult()
+                    {
+                        ErrorMessage = this.updateMessageBuilder.ToString(),
+                        Success = true
+                    }
+                );
+
+                // clear previous instance
+                this.updateMessageBuilder = new StringBuilder();
+
+                // exit
                 return;
             }
         }
 
         public override void Initialize(IServiceLocator service)
         {
-            var cpuid = service.ResolveInstance<ICpuidHelper>();
+            var CpuidHelper = service.ResolveInstance<ICpuidHelper>();
 
-            this._telegram = service.ResolveInstance<IPCAssistant>();
-            this._devices = cpuid.GetProcessors().Concat(cpuid.GetDisplayAdapters()).ToList();
+            // fill class field with devices
+            this._devices = CpuidHelper
+                .GetProcessors()
+                .Concat(
+                    CpuidHelper.GetDisplayAdapters()
+                ).ToList();
         }
 
         public string GetStatus()
         {
-            return $"*{base.Name}*: {(this.state == JobState.Started).ToReadable()}";
+            return ""; // $"*{base.Name}*: {(this._state == JobState.Started).ToReadable()}";
         }
     }
 }

@@ -22,7 +22,9 @@ namespace Plugins.Vol
         {
             this._utility = new FileInfo(
                 PCManager.CombineAssembly(
-                    Assembly.GetExecutingAssembly(), "SoundVolumeView.exe")
+                    Assembly.GetExecutingAssembly(), 
+                    "SoundVolumeView.exe"
+                )
             );
         }
 
