@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace LanPlugin.Intranet
+﻿namespace LanPlugin.Intranet
 {
     public class LanScanner : IInetScanner
     {

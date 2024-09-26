@@ -1,8 +1,6 @@
 ﻿using CommandLine;
 using Sdk.Base;
-using Sdk.Dependencies;
 using Sdk.Models;
-using Sdk.Telegram;
 using System.Diagnostics;
 
 namespace kill
@@ -30,7 +28,7 @@ namespace kill
                 this.ExecuteResultCallback(
                     new ExecuteResult()
                     {
-                        ErrorMessage = e.Message,
+                        StatusText = e.Message,
                         Success = success
                     }
                 );
@@ -54,9 +52,9 @@ namespace kill
 
             this.ExecuteResultCallback(
                 new ExecuteResult()
-                { 
-                    ErrorMessage = text, 
-                    Success = success 
+                {
+                    StatusText = text,
+                    Success = success
                 }
             );
         }

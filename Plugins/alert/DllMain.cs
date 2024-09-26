@@ -1,7 +1,9 @@
-﻿
+﻿ 
 
-namespace Plugins.Alert
+
+namespace Alert
 {
+    [Verb]
     public class DllMain : Plugin
     {
         public override async void Execute(ExecuteData executeData)

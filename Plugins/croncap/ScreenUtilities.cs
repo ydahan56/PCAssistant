@@ -1,19 +1,13 @@
-﻿using Sdk.Contracts;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace CapTimePlugin.Core
+namespace croncap
 {
-    public class DesktopApi : IApi<IEnumerable<Bitmap>>
+    public class ScreenUtilities
     {
-        public DesktopApi()
+        public IEnumerable<Bitmap> GetDesktopsBitmap()
         {
-            Func = GetDesktopBitmap;
-        }
-
-        public List<Bitmap> GetDesktopBitmap()
-        {
-            List<Bitmap> items = new();
+            var items = new List<Bitmap>();
 
             foreach (Screen screen in Screen.AllScreens)
             {
@@ -23,7 +17,7 @@ namespace CapTimePlugin.Core
                 int width = screen.Bounds.Width;
                 int height = screen.Bounds.Height;
 
-                Bitmap result = new Bitmap(width, height);
+                var result = new Bitmap(width, height);
 
                 using (var graphic = Graphics.FromImage(result))
                 {

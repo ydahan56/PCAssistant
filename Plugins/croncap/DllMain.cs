@@ -1,36 +1,46 @@
-﻿using Sdk.Contracts;
-using Sdk.Extensions;
-using Sdk.Jobs;
+﻿using CommandLine;
+using Sdk.Base;
 using Sdk.Models;
+using System.Resources;
 using Telebot.Capture;
-using Telegram.Bot;
-using Telegram.Bot.Types.InputFiles;
 
 namespace croncap
 {
-    public class DllMain : IModule, IJobStatus
+    [Verb("croncap", HelpText = "Schedules screen capture session.")]
+    public class DllMain : Plugin
     {
-        private IWorker<CaptureArgs> worker;
+        [Option("total", HelpText = "The total amount of time in seconds to run the cron")]
+        public int Total { get; set; }
+
+        [Option("timeout", HelpText = "The timeout in seconds between each execution")]
+        public int Timeout { get; set; }
+
+        [Option("stop", HelpText = "Sends a signal to cancel execution")]
+        public bool Cancel { get; set; }
+
+        private readonly string _name;
+        private readonly ResourceManager _rm;
 
         public DllMain()
         {
-            Name = "/captime";
-            Arguments = "(off|(\\d+) (\\d+))";
-            HasArguments = true;
-            Description = "Schedules screen capture session.";
+            this._name = nameof();
+            this._rm = new ResourceManager(typeof(DllMain));
         }
 
-        public override async void Execute(ExecuteData executeData)
+        public override void Execute()
         {
-            string state = executeData.Arguments[1].Value;
-
-            if (state.Equals("off"))
+            if (this.Cancel)
             {
-                await BotClient.SendTextMessageAsync(
-                    ChatId, $"Screen capture has turned {state}.", replyToMessageId: executeData.FromMessageId
+                this.ExecuteResultCallback(
+                    new ExecuteResult()
+                    {
+                        StatusText = $"croncap has been cancelled.",
+                        Success = true
+                    }
                 );
 
                 worker.Stop();
+
                 return;
             }
 
@@ -39,7 +49,7 @@ namespace croncap
             int duration = Convert.ToInt32(args[0]);
             int interval = Convert.ToInt32(args[1]);
 
-            string text = $"Screen capture has been scheduled to run {duration} sec for every {interval} sec.";
+            string text = "";
 
             await BotClient.SendTextMessageAsync(
                 ChatId, text, replyToMessageId: executeData.FromMessageId

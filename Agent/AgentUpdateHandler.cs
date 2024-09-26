@@ -99,10 +99,10 @@ namespace Agent
         private async void ExecuteResultCallback(ExecuteResult result)
         {
             // show balloon tip to the user
-            this._tray.ShowBalloonTip(1750, this._tray.Text, result.ErrorMessage, ToolTipIcon.Info);
+            this._tray.ShowBalloonTip(1750, this._tray.Text, result.StatusText, ToolTipIcon.Info);
 
             // send result to the user
-            await this._client.SendTextMessageAsync(this._update.Message.Chat.Id, result.ErrorMessage);
+            await this._client.SendTextMessageAsync(this._update.Message.Chat.Id, result.StatusText);
         }
     }
 }

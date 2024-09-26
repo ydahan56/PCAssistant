@@ -45,10 +45,10 @@ namespace Agent
             var cpuidHelper = new CpuidHelper();
 
             // read plugins
-            var plugins = ReadAndCreatePlugins();
+            var plugins = EnumPluginsInit();
 
             // register components
-            RegisterComponents(telegram, cpuidHelper, plugins);
+            RegisterComponents(cpuidHelper, plugins);
 
             // initialize plugins
             InitializePlugins(plugins);
@@ -75,16 +75,9 @@ namespace Agent
             }
         }
 
-        static void RegisterComponents(
-            IPCAssistant assistant,
-            ICpuidHelper cpuid,
-            List<IPlugin> items)
+        static void RegisterComponents(ICpuidHelper cpuid, List<IPlugin> items)
         {
-            // instances
-            Services.RegisterInstance(assistant);
             Services.RegisterInstance(cpuid);
-
-            // collections
             Services.RegisterInstances(items);
 
             //IOC.Verify();
@@ -105,7 +98,7 @@ namespace Agent
             }
         }
 
-        static List<IPlugin?> ReadAndCreatePlugins()
+        static List<IPlugin?> EnumPluginsInit()
         {
             // init list
             var list = new List<IPlugin?>();
@@ -114,7 +107,7 @@ namespace Agent
 
             if (!Directory.Exists(pluginsDirPath))
             {
-                return list;
+                throw new DirectoryNotFoundException(pluginsDirPath);
             }
 
             var pluginsPaths = Directory.EnumerateFiles(

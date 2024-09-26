@@ -1,4 +1,6 @@
-﻿using msinfo32.Components;
+﻿using CommandLine;
+using msinfo32.Components;
+using Sdk;
 using Sdk.Base;
 using Sdk.Contracts;
 using Sdk.Dependencies;
@@ -8,18 +10,12 @@ using System.Text;
 
 namespace msinfo32
 {
+    [Verb("msinfo32", HelpText = "Print workstation information.")]
     public class DllMain : Plugin
     {
-        private IPCAssistant _telegram;
         private IEnumerable<IComponent> _components;
 
-        public DllMain()
-        {
-            base.Name = "/msinfo32";
-            base.Description = "Print workstation information.";
-        }
-
-        public override void Dispatch()
+        public override void Execute()
         {
             var sb = new StringBuilder();
 
@@ -28,17 +24,31 @@ namespace msinfo32
                 sb.AppendLine(_component.GetInformation());
             }
 
-            this._telegram.SendTextBackToAdmin(sb.ToString());
-        }
+            // get file path
+            var filePath = PCManager.CombineAssembly(this.GetType().Assembly, "msinfo32.txt");
 
-        public override void Dispatch(ExecuteResult data)
-        {
-            throw new NotImplementedException();
+            // commit text to file
+            System.IO.File.WriteAllText(filePath, sb.ToString());
+
+            // obtain handle to file
+            var fs = new FileStream(filePath, FileMode.Open);
+
+            this.ExecuteResultCallback(
+                new ExecuteStreamResult()
+                {
+                    FileName = Path.GetFileName(filePath),
+                    Stream = fs,
+                    Success = true
+                }
+            );
+
+            // release fs
+            fs.Close();
+            fs.Dispose();
         }
 
         public override void Initialize(IServiceLocator service)
         {
-            this._telegram = service.ResolveInstance<IPCAssistant>();
             var cpuidHelper = service.ResolveInstance<ICpuidHelper>();
 
             var _devices = cpuidHelper.GetProcessors()

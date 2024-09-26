@@ -1,7 +1,4 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
-
-namespace LanPlugin.Intranet
+﻿namespace LanPlugin.Intranet
 {
     public class LanMonitor : IINetMonitor
     {

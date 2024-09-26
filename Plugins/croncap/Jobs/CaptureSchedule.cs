@@ -1,7 +1,4 @@
 ﻿using CapTimePlugin.Core;
-using FluentScheduler;
-using Sdk.Jobs;
-using System.Drawing;
 
 namespace Telebot.Capture
 {

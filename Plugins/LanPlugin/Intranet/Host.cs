@@ -1,6 +1,4 @@
-﻿using System.Xml.Serialization;
-
-namespace LanPlugin.Intranet
+﻿namespace LanPlugin.Intranet
 {
     [XmlRoot(ElementName = "item")]
     public class Host

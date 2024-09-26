@@ -11,10 +11,11 @@ namespace Sdk.Base
         //public string Name { get; set; }
         //public string Description { get; set; }
 
-        // todo - before declaring properties, check if you can use nuget annotators
+        // todo - before declaring properties, check if you can use cmdline annotators
 
 
         protected Action<ExecuteResult> ExecuteResultCallback;
+
 
         [Option("hours", HelpText = "Hours till command execution.")]
         public int Hours { get; set; }

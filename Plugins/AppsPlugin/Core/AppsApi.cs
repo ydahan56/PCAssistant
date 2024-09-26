@@ -1,7 +1,4 @@
 ﻿using AppsPlugin.Enums;
-using Sdk.Contracts;
-using System.Diagnostics;
-using System.Text;
 using static AppsPlugin.Native.user32;
 
 namespace AppsPlugin.Core

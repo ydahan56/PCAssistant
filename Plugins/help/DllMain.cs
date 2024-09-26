@@ -1,4 +1,5 @@
-﻿using Sdk.Base;
+﻿using CommandLine;
+using Sdk.Base;
 using Sdk.Contracts;
 using Sdk.Dependencies;
 using Sdk.Models;
@@ -7,39 +8,31 @@ using System.Text;
 
 namespace Plugins.Help
 {
+    [Verb("help", HelpText = "List of available commands.")]
     public class DllMain : Plugin
     {
-        private string text;
-        private IPCAssistant _telegram;
+        private StringBuilder sb;
 
-        public DllMain()
+        public override void Execute()
         {
-            this.Name = "/help";
-            this.Description = "List of available commands.";
-        }
-
-        public override void Dispatch()
-        {
-            this._telegram.SendTextBackToAdmin(this.text);
-        }
-
-        public override void Dispatch(ExecuteResult data)
-        {
-            throw new NotImplementedException();
+            this.ExecuteResultCallback(
+                new ExecuteResult()
+                {
+                    StatusText = sb.ToString().TrimEnd()
+                }
+            );
         }
 
         public override void Initialize(IServiceLocator service)
         {
-            StringBuilder builder = new();
-            this._telegram = service.ResolveInstance<IPCAssistant>();
-            var _Plugins = service.ResolveInstances<IPlugin>();
+            this.sb = new StringBuilder();
 
-            foreach (IPlugin _P in _Plugins)
+            var Modules = service.ResolveInstances<IPlugin>();
+
+            foreach (IPlugin Module in Modules)
             {
-                builder.AppendLine(_P.ToString());
+                sb.AppendLine(Module.ToString());
             }
-
-            this.text = builder.ToString().TrimEnd();
         }
     }
 }

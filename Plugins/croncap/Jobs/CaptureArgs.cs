@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace Telebot.Capture
+﻿namespace Telebot.Capture
 {
     public class CaptureArgs : EventArgs
     {

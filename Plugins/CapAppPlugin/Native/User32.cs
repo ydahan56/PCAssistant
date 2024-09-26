@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace CapAppPlugin.Native
+﻿namespace CapAppPlugin.Native
 {
     public static partial class user32
     {

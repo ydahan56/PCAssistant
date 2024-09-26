@@ -2,7 +2,6 @@
 using dim;
 using Sdk;
 using Sdk.Base;
-using Sdk.Contracts;
 using Sdk.Models;
 using System.Reflection;
 
@@ -12,7 +11,7 @@ namespace Plugins.Dim
     [Verb("/brightness", HelpText = "Adjust Workstation Brightness.")]
     public class DllMain : Plugin
     {
-      
+
         [Option("value", Required = true, HelpText = "Brightness Level (1-100)")]
         public int BrightnessValue { get; set; }
 
@@ -24,7 +23,7 @@ namespace Plugins.Dim
         public override void Execute()
         {
             var scriptPath = PCManager.CombineAssembly(
-                Assembly.GetExecutingAssembly(), 
+                Assembly.GetExecutingAssembly(),
                 "execute.ps1"
             );
 
@@ -38,7 +37,7 @@ namespace Plugins.Dim
             this.ExecuteResultCallback?.Invoke(
                 new ExecuteResult()
                 {
-                    ErrorMessage = result,
+                    StatusText = result,
                     Success = true
                 }
             );

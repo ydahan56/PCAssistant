@@ -1,7 +1,4 @@
-﻿using Sdk.Jobs;
-using System.Xml.Serialization;
-
-namespace LanPlugin.Intranet
+﻿namespace LanPlugin.Intranet
 {
     public abstract class IInetBase : IFeedback
     {

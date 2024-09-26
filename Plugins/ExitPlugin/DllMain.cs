@@ -1,9 +1,4 @@
-﻿using Sdk.Contracts;
-using Sdk.Hub;
-using Sdk.Models;
-using Telegram.Bot;
-
-namespace Plugins.Exit
+﻿namespace Plugins.Exit
 {
     public class DllMain : IModule
     {

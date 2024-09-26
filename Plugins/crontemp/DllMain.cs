@@ -7,9 +7,7 @@ using Sdk.Base;
 using Sdk.Contracts;
 using Sdk.Dependencies;
 using Sdk.Devices;
-using Sdk.Extensions;
 using Sdk.Models;
-using Sdk.Telegram;
 using System.Resources;
 using System.Text;
 
@@ -36,10 +34,7 @@ namespace crontemp
         public DllMain()
         {
             this._name = nameof(CronTempJob);
-            this._rm = new ResourceManager(
-                "crontemp.Resource1", 
-                this.GetType().Assembly
-            );
+            this._rm = new ResourceManager(typeof(DllMain));
         }
 
         // boolean flag to determine whether a Job exists
@@ -57,7 +52,7 @@ namespace crontemp
             this.ExecuteResultCallback(
                 new ExecuteResult()
                 {
-                    ErrorMessage = $"crontemp Job with id {this._cronJobId} has been cancelled.",
+                    StatusText = $"crontemp Job with id {this._cronJobId} has been cancelled.",
                     Success = true
                 }
             );
@@ -86,7 +81,7 @@ namespace crontemp
                 this.ExecuteResultCallback(
                     new ExecuteResult()
                     {
-                        ErrorMessage = $"crontemp Job with id {this._cronJobId} is already running.",
+                        StatusText = $"crontemp Job with id {this._cronJobId} is already running.",
                         Success = true
                     }
                 );
@@ -112,7 +107,7 @@ namespace crontemp
             this.ExecuteResultCallback(
                 new ExecuteResult()
                 {
-                    ErrorMessage = string.Format(
+                    StatusText = string.Format(
                         this._rm.GetString("SUCCESS_ERRORMESSAGE"),
                         this.Total,
                         this.Timeout
@@ -160,7 +155,7 @@ namespace crontemp
                 this.ExecuteResultCallback(
                     new ExecuteResult()
                     {
-                        ErrorMessage = this.updateMessageBuilder.ToString(),
+                        StatusText = this.updateMessageBuilder.ToString(),
                         Success = true
                     }
                 );

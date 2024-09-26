@@ -1,11 +1,4 @@
 ﻿using CapAppPlugin.Core;
-using Sdk.Contracts;
-using Sdk.Extensions;
-using Sdk.Hub;
-using Sdk.Models;
-using System.Diagnostics;
-using Telegram.Bot;
-using Telegram.Bot.Types.InputFiles;
 
 namespace Plugins.CapApp
 {

@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace AppsPlugin.Native
+﻿namespace AppsPlugin.Native
 {
     public static partial class user32
     {

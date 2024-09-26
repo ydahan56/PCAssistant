@@ -1,8 +1,5 @@
 ﻿using AppsPlugin.Core;
 using AppsPlugin.Enums;
-using Sdk.Contracts;
-using Sdk.Models;
-using Telegram.Bot;
 
 namespace Plugins.Apps
 {

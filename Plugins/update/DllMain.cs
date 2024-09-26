@@ -1,90 +1,104 @@
-﻿using FluentScheduler;
+﻿using AutoUpdaterDotNET;
+using CommandLine;
 using Sdk.Base;
-using Sdk.Contracts;
 using Sdk.Hub;
 using Sdk.Models;
-using Telegram.Bot;
+using System.Resources;
 
-namespace Plugins.Update
+namespace Update
 {
-    public class DllMain : PluginBase
+    [Verb("update", HelpText = "This command allows to check or download an update")]
+    public class DllMain : Plugin
     {
-        private readonly Dictionary<string, Func<int, Task>> _stateActions;
+        private readonly ResourceManager _rm;
 
-        private const string castUrl = "https://raw.githubusercontent.com/yoni56/PCAssistant/master/update.xml";
+        [Value(0, Required = true, HelpText = "The command argument, either 'check' or 'download'")]
+        public string UpdateCommand { get; set; }
 
         public DllMain()
         {
-            base.Name = "/update";
-            base.ArgsPattern = "(chk|dl)";
-            base.Description = "Check or download an update.";
-
-            this._stateActions = new Dictionary<string, Func<int, Task>>()
-            {
-                { "chk", CheckAction },
-                { "dl", DownloadAction }
-            };
+            this._rm = new ResourceManager(typeof(DllMain));
         }
 
-        private async void UpdateCheck(UpdateInfoEventArgs e)
+        // this flag indicates whether we're allowed to download an update
+        private bool _isDownloadEnabled;
+
+        private void OnUpdateCheck(UpdateInfoEventArgs e)
         {
             if (e.Error is null)
             {
                 if (e.IsUpdateAvailable)
                 {
-                    // Save it for later incase we want to download the update
-                    _updateInfoEventArgs = e;
+                    if (_isDownloadEnabled)
+                    {
+                        this.ExecuteResultCallback(
+                            new ExecuteResult()
+                            {
+                                StatusText = "PCAssistant is updating...",
+                                Success = true
+                            }
+                        );
 
-                    await BotClient.SendTextMessageAsync(ChatId, $"A new version {e.CurrentVersion} of Telebot is available!");
+                        var updateSuccess = AutoUpdater.DownloadUpdate(e);
+
+                        if (updateSuccess)
+                        {
+                            EventAggregator.Instance.MessageHub.Publish(ApplicationEvent.Exit);
+                        }
+
+                        return;
+                    }
+
+                    this.ExecuteResultCallback(
+                        new ExecuteResult()
+                        {
+                            StatusText = $"A new version {e.CurrentVersion} of Telebot is available!",
+                            Success = true
+                        }
+                    );
+
                     return;
                 }
 
-                await BotClient.SendTextMessageAsync(ChatId, "You're currently running the latest version.");
+                this.ExecuteResultCallback(
+                    new ExecuteResult()
+                    {
+                        StatusText = "You're currently running the latest version.",
+                        Success = true
+                    }
+                );
             }
         }
 
-        public override void Dispatch(DispatchData data)
+        public override void Execute()
         {
-            string state = data.Arguments[1].Value;
-            bool success = _stateActions.TryGetValue(state, out var action);
-
-            if (success)
+            if (this.UpdateCommand.Equals("check"))
             {
-                await action(executeData.FromMessageId);
-            }
-        }
+                this.ExecuteResultCallback(
+                    new ExecuteResult()
+                    {
+                        StatusText = "Checking for updates...",
+                        Success = true
+                    }
+                );
 
-        private async Task CheckAction(int id)
-        {
-            await BotClient.SendTextMessageAsync(
-              ChatId, "Checking for updates...", replyToMessageId: id);
+                // execute command
+                AutoUpdater.Start();
 
-            AutoUpdater.Start();
-        }
-
-        private async Task DownloadAction(int id)
-        {
-            if (_updateInfoEventArgs is null)
-            {
-                await BotClient.SendTextMessageAsync(
-                    ChatId, "Update args is null, please check for update before.", replyToMessageId: id);
+                // exit
                 return;
             }
 
-            await BotClient.SendTextMessageAsync(
-                ChatId, "Telebot is updating...", replyToMessageId: id);
-
-            bool success = AutoUpdater.DownloadUpdate(_updateInfoEventArgs);
-            if (success)
+            if (this.UpdateCommand.Equals("download"))
             {
-                Mediator.Instance.hub.Publish(AppEventType.Exit);
-            }
-        }
+                // update flag
+                this._isDownloadEnabled = true;
 
-        public override void Initialize(ModuleData moduleData)
-        {
-            base.Initialize(moduleData);
-            JobManager.Initialize(_updateJob);
+                // execute command
+                AutoUpdater.Start();
+
+                return;
+            }
         }
     }
 }

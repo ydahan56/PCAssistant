@@ -1,8 +1,6 @@
 ﻿using CommandLine;
 using Sdk.Base;
-using Sdk.Dependencies;
 using Sdk.Models;
-using Sdk.Telegram;
 using static display.Helpers.User32Helper;
 
 namespace Plugins.Display
@@ -16,16 +14,16 @@ namespace Plugins.Display
         public override void Execute()
         {
             var statusCode = PostMessage(
-                HWND_BROADCAST, 
-                WM_SYSCOMMAND, 
-                SC_MONITORPOWER, 
+                HWND_BROADCAST,
+                WM_SYSCOMMAND,
+                SC_MONITORPOWER,
                 this.State ? -1 : 2
             );
 
             this.ExecuteResultCallback(
                 new ExecuteResult()
                 {
-                    ErrorMessage = $"PostMessage returned with status code {statusCode}",
+                    StatusText = $"PostMessage returned with status code {statusCode}",
                     Success = true
                 }
             );

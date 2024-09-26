@@ -1,14 +1,11 @@
 ﻿using CommandLine;
 using Sdk;
 using Sdk.Base;
-using Sdk.Dependencies;
 using Sdk.Models;
-using Sdk.Telegram;
-using System.Diagnostics;
 using System.Reflection;
 using vol;
 
-namespace Plugins.Vol
+namespace Vol
 {
     [Verb("/volume", HelpText = "Adjust the volume level")]
     public class DllMain : Plugin
@@ -22,7 +19,7 @@ namespace Plugins.Vol
         {
             this._utility = new FileInfo(
                 PCManager.CombineAssembly(
-                    Assembly.GetExecutingAssembly(), 
+                    Assembly.GetExecutingAssembly(),
                     "SoundVolumeView.exe"
                 )
             );
@@ -37,7 +34,7 @@ namespace Plugins.Vol
                     new ExecuteResult()
                     {
                         Success = false,
-                        ErrorMessage = $"{this._utility.Name} does not exists"
+                        StatusText = $"{this._utility.Name} does not exists"
                     }
                 );
 
@@ -52,7 +49,7 @@ namespace Plugins.Vol
                     new ExecuteResult()
                     {
                         Success = false,
-                        ErrorMessage = $"Value cannot be {this.VolumeValue}, must be between 1-100"
+                        StatusText = $"Value cannot be {this.VolumeValue}, must be between 1-100"
                     }
                 );
 
@@ -69,7 +66,7 @@ namespace Plugins.Vol
                 new ExecuteResult()
                 {
                     Success = success,
-                    ErrorMessage = $"Volume has been set to value {this.VolumeValue}"
+                    StatusText = $"Volume has been set to value {this.VolumeValue}"
                 }
             );
         }

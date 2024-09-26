@@ -1,6 +1,6 @@
 ﻿namespace prtsc
 {
-    public class ScreenUtility
+    public class ScreenUtilities
     {
         public IEnumerable<Bitmap> GetScreensBitmap()
         {

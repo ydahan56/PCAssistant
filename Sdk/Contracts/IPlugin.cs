@@ -1,5 +1,4 @@
-﻿using Sdk.Base;
-using Sdk.Dependencies;
+﻿using Sdk.Dependencies;
 using Sdk.Models;
 
 namespace Sdk.Contracts

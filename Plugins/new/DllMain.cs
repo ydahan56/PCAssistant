@@ -1,4 +1,5 @@
-﻿using FluentScheduler;
+﻿using CommandLine;
+using FluentScheduler;
 using New.Jobs;
 using Sdk.Base;
 using Sdk.Dependencies;
@@ -7,36 +8,25 @@ using Sdk.Telegram;
 
 namespace New
 {
+    [Verb("new", HelpText = "Create a new instance of PCAssistant.")]
     public class DllMain : Plugin
     {
-        private IPCAssistant _telegram;
-
-        public DllMain()
+        public override void Execute()
         {
-            this.Name = "/new";
-            this.Description = "Create a new instance of PCAssistant.";
-        }
-
-        public override void Dispatch()
-        {
-            this._telegram.SendTextBackToAdmin("PCAssistant is restarting...");
+            this.ExecuteResultCallback(
+                new ExecuteResult()
+                {
+                    StatusText = "PCAssistant is restarting...",
+                    Success = true
+                }
+            );
 
             // we run the job in 5 seconds to allow
             // the bot client to observe the message
-            // and prevent it from going into an endless loop
+            // to prevent it from going in an endless loop
 
-            var _Job = new RestartJob();
-            JobManager.Initialize(_Job);
-        }
-
-        public override void Dispatch(ExecuteResult data)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Initialize(IServiceLocator service)
-        {
-            this._telegram = service.ResolveInstance<IPCAssistant>();
+            var Job = new RestartJob();
+            JobManager.Initialize(Job);
         }
     }
 }

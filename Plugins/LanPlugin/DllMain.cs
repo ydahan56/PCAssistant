@@ -1,9 +1,4 @@
 ﻿using LanPlugin.Intranet;
-using Sdk.Contracts;
-using Sdk.Extensions;
-using Sdk.Models;
-using System.Text;
-using Telegram.Bot;
 
 namespace Plugins.Lan
 {

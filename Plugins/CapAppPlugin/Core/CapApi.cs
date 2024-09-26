@@ -1,6 +1,4 @@
-﻿using Sdk.Contracts;
-using System.Drawing;
-using static CapAppPlugin.Native.user32;
+﻿using static CapAppPlugin.Native.user32;
 
 namespace CapAppPlugin.Core
 {
