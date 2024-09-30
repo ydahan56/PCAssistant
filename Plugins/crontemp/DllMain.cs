@@ -3,7 +3,7 @@ using crontemp.Enums;
 using crontemp.Jobs;
 using crontemp.Models;
 using FluentScheduler;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Contracts;
 using Sdk.Dependencies;
 using Sdk.Devices;
@@ -14,51 +14,17 @@ using System.Text;
 namespace crontemp
 {
     [Verb("crontemp", HelpText = "Monitor the temperature of the workstation")]
-    public class DllMain : Plugin
+    public class DllMain : CronPlugin
     {
-        [Option("total", HelpText = "The total amount of time in seconds to run the cron")]
-        public int Total { get; set; }
-
-        [Option("timeout", HelpText = "The timeout in seconds between each execution")]
-        public int Timeout { get; set; }
-
-        [Option("stop", HelpText = "Sends a signal to cancel execution")]
-        public bool Cancel { get; set; }
-
-
-        private readonly string _name;
         private IEnumerable<IDevice> _devices;
+        private ResourceManager _rm;
 
-        private readonly ResourceManager _rm;
-
-        public DllMain()
+        public DllMain() : base(
+            nameof(crontemp),
+            nameof(CronTempJob)
+            )
         {
-            this._name = nameof(CronTempJob);
             this._rm = new ResourceManager(typeof(DllMain));
-        }
-
-        // boolean flag to determine whether a Job exists
-        private bool IsCronJobActive => this._cronJobId > 0;
-
-        // this is used to store the ID of existing Job
-        private int _cronJobId;
-
-        private void InternalCancelJob()
-        {
-            // remove Job
-            JobManager.RemoveJob(this._name);
-
-            // update client
-            this.ExecuteResultCallback(
-                new ExecuteResult()
-                {
-                    StatusText = $"crontemp Job with id {this._cronJobId} has been cancelled.",
-                    Success = true
-                }
-            );
-
-            // reset Job id
-            this._cronJobId = 0;
         }
 
         public override void Execute()
@@ -81,7 +47,7 @@ namespace crontemp
                 this.ExecuteResultCallback(
                     new ExecuteResult()
                     {
-                        StatusText = $"crontemp Job with id {this._cronJobId} is already running.",
+                        StatusText = $"{this._nameOfClass} Job with id {this._cronJobId} is already running.",
                         Success = true
                     }
                 );
@@ -149,7 +115,7 @@ namespace crontemp
             if (updateStatus == UpdateStatus.Send)
             {
                 // add finalize text
-                this.updateMessageBuilder.AppendLine("\nFrom *Telebot*");
+                this.updateMessageBuilder.AppendLine("\nFrom *PCAssistant*");
 
                 // update client
                 this.ExecuteResultCallback(

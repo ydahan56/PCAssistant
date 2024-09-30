@@ -25,7 +25,10 @@ namespace msinfo32
             }
 
             // get file path
-            var filePath = PCManager.CombineAssembly(this.GetType().Assembly, "msinfo32.txt");
+            var filePath = PCManager.CombineAssembly(
+                this.GetType().Assembly, 
+                "msinfo32.txt"
+            );
 
             // commit text to file
             System.IO.File.WriteAllText(filePath, sb.ToString());

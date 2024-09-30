@@ -1,14 +1,30 @@
-﻿using CapTimePlugin.Core;
+﻿using FluentScheduler;
+using Sdk.Devices;
+using croncap.Enums;
+using croncap.Models;
 
-namespace Telebot.Capture
+namespace croncap.Jobs
 {
-    public class CaptureSchedule : IWorker<CaptureArgs>, IScheduled
+    public class CronCapJob : Registry, IJob
     {
-        private DateTime timeStop;
+        private readonly DateTime ElapsedDateTime;
+        private readonly Action<UpdateStatus, UpdateArgs?> update;
 
-        private void Elapsed()
+        public CronCapJob(
+            Action<UpdateStatus, UpdateArgs?> update,
+            int total,
+            int timeout
+            )
         {
-            if (DateTime.Now >= timeStop)
+            this.update = update;
+
+            this.ElapsedDateTime = DateTime.Now.AddSeconds(total);
+            base.Schedule(this).NonReentrant().WithName(this.GetType().Name).ToRunNow().AndEvery(timeout).Seconds();
+        }
+
+        public void Execute()
+        {
+            if (DateTime.Now >= ElapsedDateTime)
             {
                 Stop();
                 RaiseFeedback("scheduled capture has finished.");

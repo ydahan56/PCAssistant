@@ -4,7 +4,7 @@ using Sdk.Contracts;
 using Sdk.Dependencies;
 using Sdk.Models;
 
-namespace Sdk.Base
+namespace Sdk.Plugins
 {
     public abstract class Plugin : Registry, IPlugin, IJob
     {

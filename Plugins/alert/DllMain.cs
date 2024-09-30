@@ -1,22 +1,35 @@
-﻿ 
+﻿
 
+
+using CommandLine;
+using Sdk.Base;
+using Sdk.Models;
+using System.Windows.Forms;
 
 namespace Alert
 {
-    [Verb]
+    [Verb("alert", HelpText = "Show an alert dialog to the user.")]
     public class DllMain : Plugin
     {
-        public override async void Execute(ExecuteData executeData)
-        {
-            string text = executeData.Arguments[1].Value;
+        [Option("text", Required = true, HelpText = "The text message to show")]
+        public string Text { get; set; }
 
-            await BotClient.SendTextMessageAsync(
-                ChatId, "Alert has been displayed.", replyToMessageId: executeData.FromMessageId
+        [Option("caption", Required = false, HelpText = "The dialog's caption")]
+        public string Caption { get; set; }
+
+        public override void Execute()
+        {
+            this.ExecuteResultCallback(
+                new ExecuteResult()
+                {
+                    StatusText = "Alert has been displayed.",
+                    Success = true
+                }
             );
 
             MessageBox.Show(
-                text,
-                "Telebot",
+                this.Text,
+                String.IsNullOrWhiteSpace(this.Caption) ? this.Caption : "PCAssistant",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information,
                 MessageBoxDefaultButton.Button1,

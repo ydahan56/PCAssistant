@@ -1,29 +1,25 @@
 ﻿using CommandLine;
-using Sdk.Base;
+using croncap.Jobs;
+using croncap.Models;
+using croncap.Enums;
+using FluentScheduler;
+using Sdk.Plugins;
 using Sdk.Models;
 using System.Resources;
-using Telebot.Capture;
+using System.Text;
 
 namespace croncap
 {
     [Verb("croncap", HelpText = "Schedules screen capture session.")]
-    public class DllMain : Plugin
+    public class DllMain : CronPlugin
     {
-        [Option("total", HelpText = "The total amount of time in seconds to run the cron")]
-        public int Total { get; set; }
-
-        [Option("timeout", HelpText = "The timeout in seconds between each execution")]
-        public int Timeout { get; set; }
-
-        [Option("stop", HelpText = "Sends a signal to cancel execution")]
-        public bool Cancel { get; set; }
-
-        private readonly string _name;
         private readonly ResourceManager _rm;
 
-        public DllMain()
+        public DllMain() : base(
+            nameof(croncap),
+            nameof(CronCapJob)
+            )
         {
-            this._name = nameof();
             this._rm = new ResourceManager(typeof(DllMain));
         }
 
@@ -31,53 +27,90 @@ namespace croncap
         {
             if (this.Cancel)
             {
+                if (this.IsCronJobActive)
+                {
+                    // perform cancellation
+                    this.InternalCancelJob();
+                }
+
+                // we're done processing cancellation
+                return;
+            }
+
+            // check if an existing Job is already running
+            if (this.IsCronJobActive)
+            {
                 this.ExecuteResultCallback(
                     new ExecuteResult()
                     {
-                        StatusText = $"croncap has been cancelled.",
+                        StatusText = $"crontemp Job with id {this._cronJobId} is already running.",
                         Success = true
                     }
                 );
 
-                worker.Stop();
-
                 return;
             }
 
-            var args = state.Split(' ');
-
-            int duration = Convert.ToInt32(args[0]);
-            int interval = Convert.ToInt32(args[1]);
-
-            string text = "";
-
-            await BotClient.SendTextMessageAsync(
-                ChatId, text, replyToMessageId: executeData.FromMessageId
+            // create new job
+            var _cronJob = new CronCapJob(
+                this.OnJobUpdate,
+                this.Total,
+                this.Timeout
             );
 
-            ((IScheduled)worker).Start(duration, interval);
+            // update Job's ID
+            this._cronJobId = _cronJob.GetHashCode();
+
+            // fire Job
+            JobManager.Initialize(_cronJob);
+
+            // update client
+            this.ExecuteResultCallback(
+                new ExecuteResult()
+                {
+                    StatusText = string.Format(
+                        this._rm.GetString("SUCCESS_ERRORMESSAGE"),
+                        this.Total,
+                        this.Timeout
+                    ),
+                    Success = true
+                }
+            );
         }
 
-        private async void UpdateHandler(object sender, CaptureArgs e)
-        {
-            var raw = new InputOnlineFile(e.Capture.ToMemStream(), "preview.jpg");
-            await BotClient.SendDocumentAsync(ChatId, raw);
-        }
+        private StringBuilder updateMessageBuilder = new StringBuilder();
 
-        private async void FeedbackHandler(object sender, Feedback e)
+        private void OnJobUpdate(UpdateStatus updateStatus, UpdateArgs? args)
         {
-            await BotClient.SendTextMessageAsync(ChatId, e.Text);
-        }
-
-        public override void Initialize(ModuleData moduleData)
-        {
-            base.Initialize(moduleData);
-
-            worker = new CaptureSchedule
+            if (updateStatus == UpdateStatus.Elapsed)
             {
-                Update = UpdateHandler,
-                Feedback = FeedbackHandler
-            };
+                // perform cancellation
+                this.InternalCancelJob();
+
+                // exit
+                return;
+            }
+
+            if (updateStatus == UpdateStatus.Send)
+            {
+                // add finalize text
+                this.updateMessageBuilder.AppendLine("\nFrom *PCAssistant*");
+
+                // update client
+                this.ExecuteResultCallback(
+                    new ExecuteResult()
+                    {
+                        StatusText = this.updateMessageBuilder.ToString(),
+                        Success = true
+                    }
+                );
+
+                // clear previous instance
+                this.updateMessageBuilder = new StringBuilder();
+
+                // exit
+                return;
+            }
         }
 
         public async Task<string> GetStatus()
