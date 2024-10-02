@@ -1,11 +1,11 @@
 ﻿using CommandLine;
 using Sdk;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Models;
 using System.Reflection;
 using vol;
 
-namespace Vol
+namespace volume
 {
     [Verb("/volume", HelpText = "Adjust the volume level")]
     public class DllMain : Plugin

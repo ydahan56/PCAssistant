@@ -1,16 +1,11 @@
-﻿using Telegram.Bot.Polling;
+﻿using Telegram.Bot;
+using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 
 namespace Sdk.Telegram
 {
-    public interface IPCAssistant
+    public interface IPCAssistant : ITelegramBotClient
     {
-        Task<User> GetMeAsync();
-
-        Task SendTextToWhitelistAsync(string text);
-        Task SendPhotoToWhitelistAsync(Stream stream, string fileName);
-        Task SendDocumentToWhitelistAsync(Stream stream, string fileName);
-
         void Cancel();
         void StartReceiving(IUpdateHandler update);
     }

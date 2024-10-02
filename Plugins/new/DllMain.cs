@@ -1,14 +1,14 @@
 ﻿using CommandLine;
 using FluentScheduler;
 using New.Jobs;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Dependencies;
 using Sdk.Models;
 using Sdk.Telegram;
 
 namespace New
 {
-    [Verb("new", HelpText = "Create a new instance of PCAssistant.")]
+    [Verb("/new", HelpText = "Create a new instance of PCAssistant.")]
     public class DllMain : Plugin
     {
         public override void Execute()

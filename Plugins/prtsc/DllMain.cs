@@ -1,5 +1,5 @@
 ﻿using CommandLine;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Dependencies;
 using Sdk.Models;
 using Sdk.Telegram;
@@ -7,7 +7,7 @@ using System.Drawing.Imaging;
 
 namespace prtsc
 {
-    [Verb("prtsc", HelpText = "Get a screenshot of the workstation")]
+    [Verb("/prtsc", HelpText = "Get a screenshot of the workstation")]
     public class DllMain : Plugin
     {
         private readonly ScreenUtilities _screenUtilities;

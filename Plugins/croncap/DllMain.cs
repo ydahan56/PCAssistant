@@ -7,10 +7,11 @@ using Sdk.Plugins;
 using Sdk.Models;
 using System.Resources;
 using System.Text;
+using System.Reflection;
 
 namespace croncap
 {
-    [Verb("croncap", HelpText = "Schedules screen capture session.")]
+    [Verb("/croncap", HelpText = "Schedules screen capture session.")]
     public class DllMain : CronPlugin
     {
         private readonly ResourceManager _rm;
@@ -20,7 +21,10 @@ namespace croncap
             nameof(CronCapJob)
             )
         {
-            this._rm = new ResourceManager(typeof(DllMain));
+            this._rm = new ResourceManager(
+                "croncap.Resource1", 
+                Assembly.GetExecutingAssembly()
+            );
         }
 
         public override void Execute()
@@ -70,6 +74,7 @@ namespace croncap
                 {
                     StatusText = string.Format(
                         this._rm.GetString("SUCCESS_ERRORMESSAGE"),
+                        this._cronJobId,
                         this.Total,
                         this.Timeout
                     ),
@@ -96,10 +101,24 @@ namespace croncap
                 // add finalize text
                 this.updateMessageBuilder.AppendLine("\nFrom *PCAssistant*");
 
+                // create stream
+                var ms = new MemoryStream();
+
+                // save to stream
+                args.Capture.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+
+                // seek to begin
+                ms.Position = 0;
+
+                // create file name
+                var fileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + ".png";
+
                 // update client
                 this.ExecuteResultCallback(
-                    new ExecuteResult()
+                    new ExecuteImageResult()
                     {
+                        FileName = fileName,
+                        Stream = ms,
                         StatusText = this.updateMessageBuilder.ToString(),
                         Success = true
                     }
@@ -111,11 +130,6 @@ namespace croncap
                 // exit
                 return;
             }
-        }
-
-        public async Task<string> GetStatus()
-        {
-            return $"*Cap Time*: {worker.Active.ToReadable()}";
         }
     }
 }

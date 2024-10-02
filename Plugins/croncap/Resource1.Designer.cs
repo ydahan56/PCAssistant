@@ -61,11 +61,11 @@ namespace croncap {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to croncap has been scheduled to run {0} seconds for every {1} seconds..
+        ///   Looks up a localized string similar to croncap job {0} has been scheduled to run {1} sec for every {2} sec..
         /// </summary>
-        internal static string CRONCAP_START_MESSAGE {
+        internal static string SUCCESS_ERRORMESSAGE {
             get {
-                return ResourceManager.GetString("CRONCAP_START_MESSAGE", resourceCulture);
+                return ResourceManager.GetString("SUCCESS_ERRORMESSAGE", resourceCulture);
             }
         }
     }

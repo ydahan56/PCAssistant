@@ -28,9 +28,9 @@ namespace Sdk.Plugins
 
         public abstract void Execute();
 
-        public virtual void Initialize(IServiceLocator services) // todo - remove?
+        public virtual void Initialize(IServiceLocator services)
         {
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
         }
 
         public virtual void SetExecuteResultCallback(Action<ExecuteResult> callback)

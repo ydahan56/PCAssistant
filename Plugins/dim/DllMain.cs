@@ -1,12 +1,12 @@
 ﻿using CommandLine;
 using dim;
 using Sdk;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Models;
 using System.Reflection;
 
 
-namespace Plugins.Dim
+namespace dim
 {
     [Verb("/brightness", HelpText = "Adjust Workstation Brightness.")]
     public class DllMain : Plugin

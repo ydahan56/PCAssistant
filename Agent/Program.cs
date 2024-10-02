@@ -16,12 +16,18 @@ namespace Agent
 {
     internal static class Program
     {
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern bool SetProcessDPIAware();
+
         public static IServiceLocator Services { get; private set; }
 
         [STAThread]
         static void Main()
         {
             Env.Load();
+
+            // to capture the entire screen on high DPI computers
+            SetProcessDPIAware();
 
             EventAggregator.Instance.MessageHub
                 .Subscribe<ApplicationEvent>(OnApplicationEvent);
@@ -39,19 +45,19 @@ namespace Agent
             Cpuid64.Instance.InitSDK(PCManager.GetAppDirectory());
 
             // init telegram
-            var telegram = new AssistantBot(token, whitelist);
+            var telegram = new PCAssistantClient(token);
 
             // init cpuid helper
             var cpuidHelper = new CpuidHelper();
 
             // read plugins
-            var plugins = EnumPluginsInit();
+            var plugins = EnumeratePlugins();
 
             // register components
             RegisterComponents(cpuidHelper, plugins);
 
-            // initialize plugins
-            InitializePlugins(plugins);
+            // initialize plugins (02/10/2024 moved to parser)
+            // InitializePlugins(plugins);
 
             // start application's message loop
             Application.Run(new Main(telegram));
@@ -83,27 +89,12 @@ namespace Agent
             //IOC.Verify();
         }
 
-        static void InitializePlugins(List<IPlugin> items)
-        {
-            foreach (IPlugin item in items)
-            {
-                try
-                {
-                    item.Initialize(Services);
-                }
-                catch (NotImplementedException)
-                {
-                    // ignore
-                }
-            }
-        }
-
-        static List<IPlugin?> EnumPluginsInit()
+        static List<IPlugin?> EnumeratePlugins()
         {
             // init list
             var list = new List<IPlugin?>();
 
-            var pluginsDirPath = PCManager.Combine("Plugins");
+            var pluginsDirPath = PCManager.Combine("..\\Plugins");
 
             if (!Directory.Exists(pluginsDirPath))
             {

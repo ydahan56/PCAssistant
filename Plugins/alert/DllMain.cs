@@ -2,13 +2,13 @@
 
 
 using CommandLine;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Models;
 using System.Windows.Forms;
 
-namespace Alert
+namespace alert
 {
-    [Verb("alert", HelpText = "Show an alert dialog to the user.")]
+    [Verb("/alert", HelpText = "Show an alert dialog to the user.")]
     public class DllMain : Plugin
     {
         [Option("text", Required = true, HelpText = "The text message to show")]
@@ -29,7 +29,7 @@ namespace Alert
 
             MessageBox.Show(
                 this.Text,
-                String.IsNullOrWhiteSpace(this.Caption) ? this.Caption : "PCAssistant",
+                String.IsNullOrWhiteSpace(this.Caption) ? "PCAssistant" : this.Caption,
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information,
                 MessageBoxDefaultButton.Button1,

@@ -25,7 +25,7 @@ namespace Sdk.Containers
 
         public void RegisterInstances<T>(IEnumerable<T> instances) where T : class
         {
-            this._container.Collection.Register<T>(instances);
+           this._container.Collection.Register<T>(instances);
         }
 
         public T ResolveInstance<T>() where T : class

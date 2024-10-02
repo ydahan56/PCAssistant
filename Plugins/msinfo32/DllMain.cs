@@ -1,7 +1,7 @@
 ﻿using CommandLine;
 using msinfo32.Components;
 using Sdk;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Contracts;
 using Sdk.Dependencies;
 using Sdk.Models;
@@ -10,7 +10,7 @@ using System.Text;
 
 namespace msinfo32
 {
-    [Verb("msinfo32", HelpText = "Print workstation information.")]
+    [Verb("/msinfo32", HelpText = "Print workstation information.")]
     public class DllMain : Plugin
     {
         private IEnumerable<IComponent> _components;
@@ -37,7 +37,7 @@ namespace msinfo32
             var fs = new FileStream(filePath, FileMode.Open);
 
             this.ExecuteResultCallback(
-                new ExecuteStreamResult()
+                new ExecuteDocumentResult()
                 {
                     FileName = Path.GetFileName(filePath),
                     Stream = fs,

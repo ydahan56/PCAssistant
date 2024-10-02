@@ -20,6 +20,9 @@ namespace Sdk.Plugins
         [Option("stop", HelpText = "Sends a signal to cancel execution")]
         public bool Cancel { get; set; }
 
+        [Option("status", HelpText = "Get the current status of the cron worker")]
+        public bool Status { get; set; }
+
 
         protected readonly string _nameOfClass;
         protected readonly string _nameOfJob;

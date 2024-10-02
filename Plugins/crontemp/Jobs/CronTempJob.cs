@@ -8,7 +8,7 @@ namespace crontemp.Jobs
 {
     public class CronTempJob : Registry, IJob
     {
-        private readonly DateTime deadline;
+        private readonly DateTime elapsedDateTime;
 
         private readonly IEnumerable<IDevice> devices;
         private readonly Action<UpdateStatus, UpdateArgs?> update;
@@ -23,13 +23,15 @@ namespace crontemp.Jobs
             this.devices = devices;
             this.update = update;
 
-            this.deadline = DateTime.Now.AddSeconds(total);
-            base.Schedule(this).NonReentrant().WithName(this.GetType().Name).ToRunNow().AndEvery(timeout).Seconds();
+            this.elapsedDateTime = DateTime.Now.AddSeconds(total);
+            this.Schedule(this).NonReentrant()
+                .WithName(this.GetType().Name)
+                .ToRunNow().AndEvery(timeout).Seconds();
         }
 
         public void Execute()
         {
-            if (DateTime.Now >= this.deadline)
+            if (DateTime.Now >= this.elapsedDateTime)
             {
                 this.update(UpdateStatus.Elapsed, null);
                 return;

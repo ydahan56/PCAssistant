@@ -2,14 +2,14 @@
 using FluentScheduler;
 using pwrcfg.Commands;
 using pwrcfg.Jobs;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Dependencies;
 using Sdk.Models;
 using Sdk.Telegram;
 
 namespace pwrcfg
 {
-    [Verb("pwrcfg", HelpText = "Lock, logoff, sleep, reboot or shutdown the workstation.")]
+    [Verb("/pwrcfg", HelpText = "Lock, logoff, sleep, reboot or shutdown the workstation.")]
     public class DllMain : Plugin
     {
 

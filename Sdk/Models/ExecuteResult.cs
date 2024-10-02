@@ -24,4 +24,20 @@
             this.ResultType = ExecuteResultType.Stream;
         }
     }
+
+    public class ExecuteDocumentResult : ExecuteStreamResult
+    {
+        public ExecuteDocumentResult()
+        {
+            this.ResultType = ExecuteResultType.Document;
+        }
+    }
+
+    public class ExecuteImageResult : ExecuteStreamResult
+    {
+        public ExecuteImageResult()
+        {
+            this.ResultType = ExecuteResultType.Image;
+        }
+    }
 }

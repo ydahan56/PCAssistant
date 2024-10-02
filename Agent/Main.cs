@@ -1,9 +1,13 @@
-﻿using FluentScheduler;
+﻿using DotNetEnv;
+using FluentScheduler;
 using Hardware;
+using Microsoft.VisualBasic.ApplicationServices;
 using Nito.AsyncEx;
 using Sdk;
 using Sdk.Telegram;
+using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Agent
 {
@@ -37,34 +41,46 @@ namespace Agent
             this._client = client;
             this._tray = tray;
 
-            this.Schedule(this.StartEventListener).ToRunOnceIn(5).Seconds();
-            this.Schedule(this.AddBotNicknameToTrayTitle).ToRunOnceIn(5).Seconds();
-            this.Schedule(this.SendBotClientHelloToAdmin).ToRunOnceIn(5).Seconds();
+            this.Schedule(this.StartClientListen).ToRunOnceIn(5).Seconds();
+            this.Schedule(this.UpdateTrayCaption).ToRunOnceIn(2).Seconds();
+            this.Schedule(this.NotifyClientHello).ToRunOnceIn(5).Seconds();
         }
 
-        private void StartEventListener()
+        private void StartClientListen()
         {
             var update = new AgentUpdateHandler(this._tray, this._client);
             this._client.StartReceiving(update);
         }
 
-        private void AddBotNicknameToTrayTitle()
+        private void UpdateTrayCaption()
         {
-            AsyncContext.Run(async () =>
-            {
-                User user = await this._client.GetMeAsync();
-                SynchronizationContext.Current.Post((o) => this._tray.Text += $" - {user.Username}", null);
-            });
+            // get current user
+            var user = AsyncContext.Run(
+                async () => await this._client.GetMeAsync()
+            );
+
+            // update tray label
+            this._tray.Text += $" - {user.Username}";
         }
 
-        private void SendBotClientHelloToAdmin()
+        private void NotifyClientHello()
         {
-            AsyncContext.Run(async () =>
+            var whitelist = Env
+                .GetString("whitelist")
+                .Split(',')
+                .Select(id => Convert.ToInt64(id))
+                .Select(u => new ChatId(u));
+
+            foreach (ChatId chatId in whitelist)
             {
-                string trayTitle = "";
-                SynchronizationContext.Current.Post((o) => trayTitle = this._tray.Text, null);
-                await this._client.SendTextToWhitelistAsync($"*{trayTitle}*: I'm Up.");
-            });
+                AsyncContext.Run(
+                    async () => await this._client.SendTextMessageAsync(
+                        chatId,
+                        $"*{this._tray.Text}*: I'm Up.",
+                        parseMode: ParseMode.Markdown
+                    )
+                );
+            }
         }
     }
 }

@@ -1,14 +1,14 @@
 ﻿using CommandLine;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Contracts;
 using Sdk.Dependencies;
 using Sdk.Models;
 using Sdk.Telegram;
 using System.Text;
 
-namespace Plugins.Help
+namespace help
 {
-    [Verb("help", HelpText = "List of available commands.")]
+    [Verb("/+help", HelpText = "List of available commands.")]
     public class DllMain : Plugin
     {
         private StringBuilder sb;

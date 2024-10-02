@@ -10,10 +10,11 @@ using Sdk.Devices;
 using Sdk.Models;
 using System.Resources;
 using System.Text;
+using System.Reflection;
 
 namespace crontemp
 {
-    [Verb("crontemp", HelpText = "Monitor the temperature of the workstation")]
+    [Verb("/crontemp", HelpText = "Monitor the temperature of the workstation")]
     public class DllMain : CronPlugin
     {
         private IEnumerable<IDevice> _devices;
@@ -24,7 +25,10 @@ namespace crontemp
             nameof(CronTempJob)
             )
         {
-            this._rm = new ResourceManager(typeof(DllMain));
+            this._rm = new ResourceManager(
+                "crontemp.Resource1", 
+                Assembly.GetExecutingAssembly()
+            );
         }
 
         public override void Execute()
@@ -75,6 +79,7 @@ namespace crontemp
                 {
                     StatusText = string.Format(
                         this._rm.GetString("SUCCESS_ERRORMESSAGE"),
+                        this._cronJobId,
                         this.Total,
                         this.Timeout
                     ),
@@ -102,7 +107,7 @@ namespace crontemp
                 // perform append
                 this.updateMessageBuilder.AppendLine(
                     string.Format(
-                        this._rm.GetString("UPDATE_ERRORMESSAGE"),
+                        this._rm.GetString("APPEND_ERRORMESSAGE"),
                         args.DeviceName,
                         args.Temperature
                     )
@@ -144,11 +149,6 @@ namespace crontemp
                 .Concat(
                     CpuidHelper.GetDisplayAdapters()
                 ).ToList();
-        }
-
-        public string GetStatus()
-        {
-            return ""; // $"*{base.Name}*: {(this._state == JobState.Started).ToReadable()}";
         }
     }
 }

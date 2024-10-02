@@ -2,12 +2,14 @@
 using Sdk.Devices;
 using croncap.Enums;
 using croncap.Models;
+using System.Drawing;
 
 namespace croncap.Jobs
 {
     public class CronCapJob : Registry, IJob
     {
-        private readonly DateTime ElapsedDateTime;
+        private readonly ScreenUtilities screenUtilities;
+        private readonly DateTime elapsedDateTime;
         private readonly Action<UpdateStatus, UpdateArgs?> update;
 
         public CronCapJob(
@@ -17,68 +19,33 @@ namespace croncap.Jobs
             )
         {
             this.update = update;
-
-            this.ElapsedDateTime = DateTime.Now.AddSeconds(total);
-            base.Schedule(this).NonReentrant().WithName(this.GetType().Name).ToRunNow().AndEvery(timeout).Seconds();
+            this.elapsedDateTime = DateTime.Now.AddSeconds(total);
+            this.screenUtilities = new ScreenUtilities();
+            
+            this.Schedule(this).NonReentrant()
+                .WithName(this.GetType().Name)
+                .ToRunNow().AndEvery(timeout).Seconds();
         }
 
         public void Execute()
         {
-            if (DateTime.Now >= ElapsedDateTime)
+            if (DateTime.Now >= this.elapsedDateTime)
             {
-                Stop();
-                RaiseFeedback("scheduled capture has finished.");
+                this.update(UpdateStatus.Elapsed, null);
                 return;
             }
 
-            var api = new DesktopApi();
+            var screens = this.screenUtilities.GetDesktopsBitmap();
 
-            api.Invoke((screens) =>
+            foreach (Bitmap screen in screens)
             {
-                foreach (Bitmap screen in screens)
+                var args = new UpdateArgs
                 {
-                    var result = new CaptureArgs
-                    {
-                        Capture = screen
-                    };
+                    Capture = screen
+                };
 
-                    RaiseUpdate(result);
-                }
-            });
-        }
-
-        public void Start(int durationSec, int intervalSec)
-        {
-            if (Active)
-            {
-                RaiseFeedback("Screen capture has already been scheduled.");
-                return;
+                this.update(UpdateStatus.Send, args);
             }
-
-            timeStop = DateTime.Now.AddSeconds(durationSec);
-
-            JobManager.AddJob(
-                Elapsed,
-                s => s.WithName(GetType().Name).ToRunNow().AndEvery(intervalSec).Seconds()
-            );
-            Active = true;
-        }
-
-        public override void Stop()
-        {
-            if (!Active)
-            {
-                RaiseFeedback("Screen capture has not been scheduled.");
-                return;
-            }
-
-            JobManager.RemoveJob(GetType().Name);
-            Active = false;
-        }
-
-        public override void Start()
-        {
-            throw new NotImplementedException();
         }
     }
 }

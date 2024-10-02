@@ -2,20 +2,21 @@
 using DotNetEnv;
 using FluentScheduler;
 using Sdk;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Contracts;
 using Sdk.Models;
 using Sdk.Telegram;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using Nito.AsyncEx;
+using Telegram.Bot.Types.Enums;
 
 namespace Agent
 {
     public class AgentUpdateHandler : IUpdateHandler
     {
         private Update _update;
-        private ITelegramBotClient _client;
 
         private readonly NotifyIcon _tray;
         private readonly IPCAssistant _assistant;
@@ -50,7 +51,6 @@ namespace Agent
         public async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken cancellationToken)
         {
             this._update = update;
-            this._client = client;
 
             if (!this._whitelist.Contains(update.Message.From.Id))
             {
@@ -81,6 +81,9 @@ namespace Agent
             Parser.Default.ParseArguments(args, this._commands)
                 .WithParsed<Plugin>((o) =>
                 {
+                    // initliaze plugin
+                    o.Initialize(Program.Services);
+
                     // set callback for the command
                     o.SetExecuteResultCallback(this.ExecuteResultCallback);
 
@@ -96,13 +99,53 @@ namespace Agent
                 });
         }
 
-        private async void ExecuteResultCallback(ExecuteResult result)
+        private void ExecuteResultCallback(ExecuteResult result)
         {
-            // show balloon tip to the user
-            this._tray.ShowBalloonTip(1750, this._tray.Text, result.StatusText, ToolTipIcon.Info);
+            if (result.ResultType == ExecuteResultType.Text)
+            {
+                // show balloon tip to the user
+                this._tray.ShowBalloonTip(1750, this._tray.Text, result.StatusText, ToolTipIcon.Info);
 
-            // send result to the user
-            await this._client.SendTextMessageAsync(this._update.Message.Chat.Id, result.StatusText);
+                // send result to the user
+                AsyncContext.Run(async () =>
+                {
+                    await this._assistant.SendTextMessageAsync(
+                        this._update.Message.Chat.Id,
+                        result.StatusText,
+                        parseMode: ParseMode.Markdown
+                    );
+                });
+            }
+            else if (result.ResultType == ExecuteResultType.Document)
+            {
+                AsyncContext.Run(async () =>
+                {
+                    var document = (result as ExecuteDocumentResult);
+
+                    // perform send
+                    await this._assistant.SendDocumentAsync(
+                        this._update.Message.Chat.Id,
+                        InputFile.FromStream(
+                            document.Stream, document.FileName
+                        )
+                    );
+                });
+            }
+            else if (result.ResultType == ExecuteResultType.Image)
+            {
+                AsyncContext.Run(async () =>
+                {
+                    var image = (result as ExecuteImageResult);
+
+                    // perform send
+                    await this._assistant.SendPhotoAsync(
+                        this._update.Message.Chat.Id,
+                        InputFile.FromStream(
+                            image.Stream, image.FileName
+                        )
+                    );
+                });
+            }
         }
     }
 }

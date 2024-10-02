@@ -1,23 +1,30 @@
 ﻿using AutoUpdaterDotNET;
 using CommandLine;
-using Sdk.Base;
+using Sdk.Plugins;
 using Sdk.Hub;
 using Sdk.Models;
 using System.Resources;
+using System.Reflection;
 
-namespace Update
+namespace update
 {
-    [Verb("update", HelpText = "This command allows to check or download an update")]
+    [Verb("/update", HelpText = "This command allows to check or download an update")]
     public class DllMain : Plugin
     {
         private readonly ResourceManager _rm;
 
-        [Value(0, Required = true, HelpText = "The command argument, either 'check' or 'download'")]
-        public string UpdateCommand { get; set; }
+        [Option("download", Required = false, HelpText = "Download an update")]
+        public bool Download { get; set; }
+
+        [Option("check", Required = false, HelpText = "Check for an update")]
+        public bool Check {  get; set; }
 
         public DllMain()
         {
-            this._rm = new ResourceManager(typeof(DllMain));
+            this._rm = new ResourceManager(
+                "update.Resource1",
+                Assembly.GetExecutingAssembly()
+            );
         }
 
         // this flag indicates whether we're allowed to download an update
@@ -46,6 +53,8 @@ namespace Update
                             EventAggregator.Instance.MessageHub.Publish(ApplicationEvent.Exit);
                         }
 
+                        // we don't need to reset flag, we restart the client anyways
+
                         return;
                     }
 
@@ -72,7 +81,7 @@ namespace Update
 
         public override void Execute()
         {
-            if (this.UpdateCommand.Equals("check"))
+            if (this.Check)
             {
                 this.ExecuteResultCallback(
                     new ExecuteResult()
@@ -89,7 +98,7 @@ namespace Update
                 return;
             }
 
-            if (this.UpdateCommand.Equals("download"))
+            if (this.Download)
             {
                 // update flag
                 this._isDownloadEnabled = true;
