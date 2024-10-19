@@ -32,39 +32,32 @@ namespace update
 
         private void OnUpdateCheck(UpdateInfoEventArgs e)
         {
-            if (e.Error is null)
+            if (e.Error is not null)
             {
-                if (e.IsUpdateAvailable)
+                // todo - print error?
+                return;
+            }
+
+            if (e.IsUpdateAvailable)
+            {
+                if (_isDownloadEnabled)
                 {
-                    if (_isDownloadEnabled)
-                    {
-                        this.ExecuteResultCallback(
-                            new ExecuteResult()
-                            {
-                                StatusText = "PCAssistant is updating...",
-                                Success = true
-                            }
-                        );
-
-                        var updateSuccess = AutoUpdater.DownloadUpdate(e);
-
-                        if (updateSuccess)
-                        {
-                            EventAggregator.Instance.MessageHub.Publish(ApplicationEvent.Exit);
-                        }
-
-                        // we don't need to reset flag, we restart the client anyways
-
-                        return;
-                    }
-
                     this.ExecuteResultCallback(
                         new ExecuteResult()
                         {
-                            StatusText = $"A new version {e.CurrentVersion} of Telebot is available!",
+                            StatusText = "PCAssistant is updating...",
                             Success = true
                         }
                     );
+
+                    var updateSuccess = AutoUpdater.DownloadUpdate(e);
+
+                    if (updateSuccess)
+                    {
+                        EventAggregator.Instance.MessageHub.Publish(ApplicationEvent.Exit);
+                    }
+
+                    // we don't need to reset flag, we restart the client anyways
 
                     return;
                 }
@@ -72,11 +65,21 @@ namespace update
                 this.ExecuteResultCallback(
                     new ExecuteResult()
                     {
-                        StatusText = "You're currently running the latest version.",
+                        StatusText = $"A new version {e.CurrentVersion} of PCAssistant is available!",
                         Success = true
                     }
                 );
+
+                return;
             }
+
+            this.ExecuteResultCallback(
+                new ExecuteResult()
+                {
+                    StatusText = "You're currently running the latest version of PCAssistant.",
+                    Success = true
+                }
+            );
         }
 
         public override void Execute()

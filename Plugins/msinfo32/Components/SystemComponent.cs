@@ -3,11 +3,11 @@ using System.Text;
 
 namespace msinfo32.Components
 {
-    public class SYSTEM_INFO : IComponent
+    public class SystemComponent : IComponent
     {
         private readonly IEnumerable<IDevice> devices;
 
-        public SYSTEM_INFO(IEnumerable<IDevice> devices)
+        public SystemComponent(IEnumerable<IDevice> devices)
         {
             this.devices = devices;
         }

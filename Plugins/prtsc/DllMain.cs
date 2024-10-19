@@ -23,8 +23,7 @@ namespace prtsc
 
             foreach (Bitmap screen in screens)
             {
-                var fileName = Path.GetRandomFileName();
-                fileName = Path.GetFileNameWithoutExtension(fileName) + ".png";
+                var fileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + ".png";
 
                 using MemoryStream buffer = new MemoryStream();
 
@@ -36,7 +35,7 @@ namespace prtsc
 
                 // send frame to client
                 this.ExecuteResultCallback(
-                    new ExecuteStreamResult()
+                    new ExecuteImageResult()
                     {
                         Success = true,
                         FileName = fileName,

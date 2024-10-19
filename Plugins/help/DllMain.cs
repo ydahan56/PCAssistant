@@ -5,10 +5,11 @@ using Sdk.Dependencies;
 using Sdk.Models;
 using Sdk.Telegram;
 using System.Text;
+using System.Reflection;
 
 namespace help
 {
-    [Verb("/+help", HelpText = "List of available commands.")]
+    [Verb("/help", HelpText = "List of available commands.")]
     public class DllMain : Plugin
     {
         private StringBuilder sb;
@@ -25,14 +26,33 @@ namespace help
 
         public override void Initialize(IServiceLocator service)
         {
+            var modules = service.ResolveInstances<IPlugin>();
+
             this.sb = new StringBuilder();
 
-            var Modules = service.ResolveInstances<IPlugin>();
-
-            foreach (IPlugin Module in Modules)
+            // Iterate over each module (plugin)
+            foreach (IPlugin module in modules)
             {
-                sb.AppendLine(Module.ToString());
+                var type = module.GetType();
+                var verbAttr = type.GetCustomAttribute<VerbAttribute>();
+
+                // Display the verb (command)
+                if (verbAttr != null)
+                {
+                    sb.AppendLine($"{verbAttr.Name}: {verbAttr.HelpText}");
+
+                    // Get and display the options for each verb
+                    var options = type.GetProperties()
+                        .Where(p => p.GetCustomAttribute<OptionAttribute>() != null);
+
+                    foreach (var option in options)
+                    {
+                        var optionAttr = option.GetCustomAttribute<OptionAttribute>();
+                        sb.AppendLine($"  --{optionAttr.LongName ?? optionAttr.ShortName.ToString()} ({optionAttr.HelpText})");
+                    }
+                }
             }
         }
+
     }
 }

@@ -61,10 +61,10 @@ namespace msinfo32
 
             this._components = new IComponent[]
             {
-                new SYSTEM_INFO(_devices),
-                new LAN_IPv4(),
-                new WAN_IPv4(),
-                new UP_TIME()
+                new SystemComponent(_devices),
+                new IPv4LanComponent(),
+                new IPv4WanComponent(),
+                new UpTimeComponnet()
             };
         }
     }

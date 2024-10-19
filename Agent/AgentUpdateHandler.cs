@@ -70,7 +70,14 @@ namespace Agent
                 return;
             }
 
-            var tipText = $"Received {update.Message.Text} from {update.Message.From.Username}.";
+
+            dynamic from = String.IsNullOrWhiteSpace(
+                update.Message.From.Username) ? 
+                update.Message.From.Id : 
+                update.Message.From.Username
+            ;
+
+            var tipText = $"Received {update.Message.Text} from {from}.";
 
             // show balloon tip to the user
             this._tray.ShowBalloonTip(1750, this._tray.Text, tipText, ToolTipIcon.Info);

@@ -4,6 +4,6 @@ namespace croncap.Models
 {
     public class UpdateArgs : EventArgs
     {
-        public Bitmap Capture { get; set; }
+        public Bitmap DesktopScreen { get; set; }
     }
 }

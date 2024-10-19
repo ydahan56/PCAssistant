@@ -41,7 +41,7 @@ namespace croncap.Jobs
             {
                 var args = new UpdateArgs
                 {
-                    Capture = screen
+                    DesktopScreen = screen
                 };
 
                 this.update(UpdateStatus.Send, args);

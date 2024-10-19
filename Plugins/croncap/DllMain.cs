@@ -47,7 +47,7 @@ namespace croncap
                 this.ExecuteResultCallback(
                     new ExecuteResult()
                     {
-                        StatusText = $"crontemp Job with id {this._cronJobId} is already running.",
+                        StatusText = $"{this._nameOfClass} Job with id {this._cronJobId} is already running.",
                         Success = true
                     }
                 );
@@ -105,7 +105,7 @@ namespace croncap
                 var ms = new MemoryStream();
 
                 // save to stream
-                args.Capture.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                args.DesktopScreen.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
 
                 // seek to begin
                 ms.Position = 0;

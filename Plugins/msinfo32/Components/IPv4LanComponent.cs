@@ -3,7 +3,7 @@ using System.Net.Sockets;
 
 namespace msinfo32.Components
 {
-    public class LAN_IPv4 : IComponent
+    public class IPv4LanComponent : IComponent
     {
         public string GetInformation()
         {

@@ -1,6 +1,8 @@
-﻿namespace CapAppPlugin.Native
+﻿using System.Runtime.InteropServices;
+
+namespace capapp.Helpers
 {
-    public static partial class user32
+    public static partial class User32Helper
     {
         [DllImport("user32.dll")]
         public static extern IntPtr GetWindowRect(IntPtr hWnd, ref Rect rect);
@@ -16,7 +18,7 @@
         public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
     }
 
-    public static partial class user32
+    public static partial class User32Helper
     {
         public enum GWL
         {

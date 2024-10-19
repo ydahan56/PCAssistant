@@ -1,6 +1,8 @@
-﻿namespace AppsPlugin.Native
+﻿using System.Runtime.InteropServices;
+
+namespace apps.Helpers
 {
-    public static partial class user32
+    public static partial class User32Helper
     {
         [DllImport("user32.dll")]
         public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
@@ -13,7 +15,7 @@
         public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
     }
 
-    public static partial class user32
+    public static partial class User32Helper
     {
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 

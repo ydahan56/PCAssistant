@@ -2,7 +2,7 @@
 
 namespace msinfo32.Components
 {
-    public class WAN_IPv4 : IComponent
+    public class IPv4WanComponent : IComponent
     {
         public string GetInformation()
         {

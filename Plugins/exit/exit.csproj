@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <BaseOutputPath>C:\Users\ydaha\OneDrive\Documents\GitHub\Telebot\GUI\bin\Debug\Plugins\net6.0-windows</BaseOutputPath>
+	<BaseOutputPath>$(SolutionDir)\Agent\bin\Debug\Plugins\exit</BaseOutputPath>
+	<AssemblyName>$(MSBuildProjectName).Plugin</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

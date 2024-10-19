@@ -8,12 +8,6 @@ namespace Sdk.Plugins
 {
     public abstract class Plugin : Registry, IPlugin, IJob
     {
-        //public string Name { get; set; }
-        //public string Description { get; set; }
-
-        // todo - before declaring properties, check if you can use cmdline annotators
-
-
         protected Action<ExecuteResult> ExecuteResultCallback;
 
 
@@ -25,6 +19,7 @@ namespace Sdk.Plugins
 
         [Option("seconds", HelpText = "Seconds till command execution.")]
         public int Seconds { get; set; }
+
 
         public abstract void Execute();
 
@@ -58,11 +53,6 @@ namespace Sdk.Plugins
 
             // no delay? execute now
             this.Schedule(this).ToRunNow();
-        }
-
-        public override string ToString()
-        {
-            return "";//$"*{this.Name + " " + this.Args.ToString()}* - {this.Description}";
         }
     }
 }

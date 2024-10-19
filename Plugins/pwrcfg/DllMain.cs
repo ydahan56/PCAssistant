@@ -16,7 +16,7 @@ namespace pwrcfg
         [Option("state", Required = true, HelpText = "The desired workstation power state")]
         public string State { get; set; }
 
-        [Option("timeout", Required = false, Default = 0)]
+        [Option("timeout", Required = false, Default = 0, HelpText = "Timeout in seconds before execution")]
         public int Timeout { get; set; }
 
         public override void Execute()

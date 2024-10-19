@@ -2,7 +2,7 @@
 
 namespace msinfo32.Components
 {
-    public class UP_TIME : IComponent
+    public class UpTimeComponnet : IComponent
     {
         public string GetInformation()
         {
@@ -11,7 +11,7 @@ namespace msinfo32.Components
             var ts = TimeSpan.FromMilliseconds(_tick);
             var fmt = this.FormatTick(ts);
 
-            return $"*Wakeup Time*: {fmt}";
+            return $"*Up Time*: {fmt}";
         }
 
         private string FormatTick(TimeSpan ts)
