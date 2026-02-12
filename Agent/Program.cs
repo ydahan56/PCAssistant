@@ -35,11 +35,6 @@ namespace Agent
             Services = new DependencyLocator(new Container());
 
             var token = Env.GetString("token");
-            var whitelist = Env.GetString("whitelist")
-                .Split(",")
-                .Select(id => Convert.ToInt64(id))
-                .Select(id => new ChatId(id))
-                .ToList();
 
             // init cpuidsdk
             Cpuid64.Instance.InitSDK(PCManager.GetAppDirectory());

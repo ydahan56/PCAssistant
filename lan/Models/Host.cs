@@ -1,4 +1,7 @@
-﻿namespace LanPlugin.Intranet
+﻿using System.Text;
+using System.Xml.Serialization;
+
+namespace lan.Models
 {
     [XmlRoot(ElementName = "item")]
     public class Host
@@ -35,17 +38,14 @@
 
         public override string ToString()
         {
-            string res = Ip_address;
+            var sb = new StringBuilder();
 
-            if (!string.IsNullOrEmpty(Device_information))
-                res += $"\n{Device_information}";
+            sb.AppendLine(this.Ip_address);
+            sb.AppendLine(this.Device_information);
+            sb.AppendLine(this.Device_name);
+            sb.AppendLine(this.Network_adapter_company);
 
-            if (!string.IsNullOrEmpty(Device_name))
-                res += $"\n{Device_name}";
-
-            res += $"\n{Network_adapter_company}";
-
-            return res;
+            return sb.ToString();
         }
     }
 }

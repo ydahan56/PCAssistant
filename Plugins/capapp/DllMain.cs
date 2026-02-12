@@ -5,7 +5,7 @@ using Sdk.Models;
 using capapp.Helpers;
 using System.Drawing.Imaging;
 
-namespace Plugins.CapApp
+namespace capapp
 {
     [Verb("/capapp", HelpText = "Capture the window of a program")]
     public class DllMain : Plugin

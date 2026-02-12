@@ -29,10 +29,18 @@ namespace Agent
             this._tray = tray;
             this._assistant = assistant;
 
-            this._whitelist = Env.GetString("whitelist")
-                .Split(',')
-                .Select(id => Convert.ToInt64(id))
-                .ToList();
+            //this._whitelist = Env.GetString("whitelist")
+            //    .Split(",")
+            //    .Select(id => {
+            //        if (string.IsNullOrWhiteSpace(id))
+            //            return new ChatId(0);
+
+            //        var parsed = Convert.ToInt64(id);
+            //        var chat = new ChatId(id);
+
+            //        return chat;
+            //    })
+            //    .ToList();
 
             this._commands = Program.Services
                 .ResolveInstances<IPlugin>()
@@ -52,12 +60,12 @@ namespace Agent
         {
             this._update = update;
 
-            if (!this._whitelist.Contains(update.Message.From.Id))
-            {
-                await client.SendTextMessageAsync(update.Message.Chat.Id, "Unauthorized.");
+            //if (!this._whitelist.Contains(update.Message.From.Id))
+            //{
+            //    await client.SendTextMessageAsync(update.Message.Chat.Id, "Unauthorized.");
 
-                return;
-            }
+            //    return;
+            //}
 
             if (string.IsNullOrWhiteSpace(update.Message.Text))
             {

@@ -3,7 +3,7 @@ using CommandLine;
 using Sdk.Plugins;
 using Sdk.Models;
 
-namespace Apps
+namespace apps
 {
     [Verb("/apps", HelpText = "Check which apps are running on the workstation")]
     public class DllMain : Plugin

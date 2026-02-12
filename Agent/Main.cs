@@ -43,7 +43,7 @@ namespace Agent
 
             this.Schedule(this.StartClientListen).ToRunOnceIn(5).Seconds();
             this.Schedule(this.UpdateTrayCaption).ToRunOnceIn(2).Seconds();
-            this.Schedule(this.NotifyClientHello).ToRunOnceIn(5).Seconds();
+            //this.Schedule(this.NotifyClientHello).ToRunOnceIn(5).Seconds();
         }
 
         private void StartClientListen()
@@ -65,13 +65,21 @@ namespace Agent
 
         private void NotifyClientHello()
         {
-            var whitelist = Env
-                .GetString("whitelist")
-                .Split(',')
-                .Select(id => Convert.ToInt64(id))
-                .Select(u => new ChatId(u));
+            var whitelist = Env.GetString("whitelist")
+                .Split(",")
+                .Select(id =>
+                {
+                    if (string.IsNullOrWhiteSpace(id))
+                        return new ChatId(0);
 
-            foreach (ChatId chatId in whitelist)
+                    var parsed = Convert.ToInt64(id);
+                    var chat = new ChatId(id);
+
+                    return chat;
+                })
+                .ToList();
+
+            foreach (ChatId chatId in whitelist) // todo - replace with an event
             {
                 AsyncContext.Run(
                     async () => await this._client.SendTextMessageAsync(
