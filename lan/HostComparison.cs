@@ -1,4 +1,6 @@
-﻿namespace LanPlugin.Intranet
+﻿using lan.Models;
+
+namespace lan
 {
     public class HostComparison : IEqualityComparer<Host>
     {

@@ -4,15 +4,22 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml.Serialization;
 
-namespace lan
+namespace lan.Types
 {
-    public class OperationBase
+    public abstract class OperationBase
     {
+        protected readonly string directoryuri;
         protected readonly string programuri;
 
-        public OperationBase()
+        protected OperationBase()
         {
-            this.programuri = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wnet.exe");
+            this.directoryuri = AppDomain.CurrentDomain.BaseDirectory;
+            this.programuri = Path.Combine(this.directoryuri, "wnet.exe");
+        }
+
+        protected string CombineDirectory(string fileName)
+        {
+            return Path.Combine(this.directoryuri, fileName);
         }
 
         protected List<Host> ReadHosts(string path)
@@ -22,5 +29,7 @@ namespace lan
             var arg = (HostsArg)serializer.Deserialize(fileStream);
             return arg.Hosts;
         }
+
+        public abstract void Execute();
     }
 }

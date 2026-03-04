@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace lan
+namespace lan.Types
 {
-    public enum Operation
+    public enum OperationType
     {
         scan,
         listen,

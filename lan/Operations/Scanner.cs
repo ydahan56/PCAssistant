@@ -1,8 +1,9 @@
-﻿using System.Diagnostics;
+﻿using lan.Types;
+using System.Diagnostics;
 
-namespace lan.scanner
+namespace lan.Operations
 {
-    public class Scanner : IInetScanner
+    public class Scanner : OperationBase
     {
         private readonly ProcessStartInfo si;
         private readonly Action<string> _updateAvailable;
