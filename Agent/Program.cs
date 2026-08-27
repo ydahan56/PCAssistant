@@ -26,7 +26,7 @@ namespace Agent
             // Get Telegram bot token
             var token = bootstrapper.GetTelegramToken();
 
-            // Initialize Telegram client
+            // Initialize Telegram 
             var telegram = new PCAssistantClient(token);
 
             try

@@ -51,7 +51,7 @@ namespace Agent
         /// <summary>
         /// Handles polling errors from the Telegram bot client.
         /// </summary>
-        public async Task HandlePollingErrorAsync(ITelegramBotClient client, Exception exception, CancellationToken cancellationToken)
+        public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
         {
             try
             {

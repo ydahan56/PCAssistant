@@ -151,10 +151,9 @@ namespace Agent.Infrastructure
         {
             AsyncContext.Run(async () =>
             {
-                await ((ITelegramBotClient)_assistant).SendTextMessageAsync(
-                    chatId,
-                    text,
-                    replyToMessageId: replyToMessageId,
+                await ((ITelegramBotClient)_assistant).SendMessage(
+                    new ChatId(chatId), text,
+                    replyParameters: new ReplyParameters() { MessageId = replyToMessageId },
                     parseMode: ParseMode.Markdown
                 );
             });
@@ -167,8 +166,8 @@ namespace Agent.Infrastructure
         {
             AsyncContext.Run(async () =>
             {
-                await ((ITelegramBotClient)_assistant).SendDocumentAsync(
-                    chatId,
+                await ((ITelegramBotClient)_assistant).SendDocument(
+                    new ChatId(chatId),
                     InputFile.FromStream(document.Stream, document.FileName)
                 );
             });
@@ -181,8 +180,8 @@ namespace Agent.Infrastructure
         {
             AsyncContext.Run(async () =>
             {
-                await ((ITelegramBotClient)_assistant).SendPhotoAsync(
-                    chatId,
+                await ((ITelegramBotClient)_assistant).SendPhoto(
+                    new ChatId(chatId),
                     InputFile.FromStream(image.Stream, image.FileName)
                 );
             });
@@ -198,10 +197,10 @@ namespace Agent.Infrastructure
 
             AsyncContext.Run(async () =>
             {
-                await ((ITelegramBotClient)_assistant).SendTextMessageAsync(
-                    update.Message.Chat.Id,
+                await ((ITelegramBotClient)_assistant).SendMessage(
+                    new ChatId(update.Message.Chat.Id),
                     "❌ Unrecognized command.",
-                    replyToMessageId: update.Message.MessageId
+                    replyParameters: new ReplyParameters() { MessageId = update.Message.MessageId }
                 );
             });
         }

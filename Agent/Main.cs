@@ -80,9 +80,7 @@ namespace Agent
             try
             {
                 // Get bot information asynchronously
-                var user = Nito.AsyncEx.AsyncContext.Run(
-                    async () => await ((ITelegramBotClient)_client).GetMeAsync()
-                );
+                var user = Nito.AsyncEx.AsyncContext.Run(async () => await _client.GetMe());
 
                 // Update tray label with username
                 if (user?.Username != null)
