@@ -1,166 +1,95 @@
-﻿using CommandLine;
-using DotNetEnv;
-using FluentScheduler;
+using Agent.Infrastructure;
+using Agent.Infrastructure.Pipeline;
 using Sdk;
-using Sdk.Plugins;
-using Sdk.Contracts;
-using Sdk.Models;
+using Sdk.Dependencies;
 using Sdk.Telegram;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
-using Nito.AsyncEx;
-using Telegram.Bot.Types.Enums;
 
 namespace Agent
 {
+    /// <summary>
+    /// Handles Telegram bot update events.
+    /// Routes incoming messages through the command processing pipeline.
+    /// Implements IUpdateHandler for the Telegram Bot Client.
+    /// </summary>
     public class AgentUpdateHandler : IUpdateHandler
     {
-        private Update _update;
+        private readonly TelegramMessageProcessor _messageProcessor;
 
-        private readonly NotifyIcon _tray;
-        private readonly IPCAssistant _assistant;
-
-        private readonly List<long> _whitelist;
-        private readonly Type[] _commands;
-
-        public AgentUpdateHandler(NotifyIcon tray, IPCAssistant assistant)
+        public AgentUpdateHandler(NotifyIcon tray, IPCAssistant assistant, IServiceLocator services)
         {
-            this._tray = tray;
-            this._assistant = assistant;
+            // Build the command processing pipeline
+            var pipeline = BuildCommandPipeline(services);
 
-            //this._whitelist = Env.GetString("whitelist")
-            //    .Split(",")
-            //    .Select(id => {
-            //        if (string.IsNullOrWhiteSpace(id))
-            //            return new ChatId(0);
-
-            //        var parsed = Convert.ToInt64(id);
-            //        var chat = new ChatId(id);
-
-            //        return chat;
-            //    })
-            //    .ToList();
-
-            this._commands = Program.Services
-                .ResolveInstances<IPlugin>()
-                .Select(x => x.GetType())
-                .ToArray();
+            // Create message processor
+            _messageProcessor = new TelegramMessageProcessor(assistant, tray, pipeline);
         }
 
-        public async Task HandlePollingErrorAsync(ITelegramBotClient client, Exception exception, CancellationToken cancellationToken)
-        {
-            await System.IO.File.AppendAllTextAsync(
-                PCManager.Combine("log.txt"),
-                exception.ToString() + Environment.NewLine
-            );
-        }
-
+        /// <summary>
+        /// Handles incoming Telegram updates.
+        /// Delegates message processing to the message processor.
+        /// </summary>
         public async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken cancellationToken)
         {
-            this._update = update;
-
-            //if (!this._whitelist.Contains(update.Message.From.Id))
-            //{
-            //    await client.SendTextMessageAsync(update.Message.Chat.Id, "Unauthorized.");
-
-            //    return;
-            //}
-
-            if (string.IsNullOrWhiteSpace(update.Message.Text))
+            try
             {
-                await client.SendTextMessageAsync(
-                    update.Message.Chat.Id,
-                    "Unrecognized command.",
-                    replyToMessageId: update.Message.MessageId
-                );
-
-                return;
+                // Only process message updates
+                if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
+                {
+                    await _messageProcessor.ProcessMessageAsync(update);
+                }
             }
-
-
-            dynamic from = String.IsNullOrWhiteSpace(
-                update.Message.From.Username) ? 
-                update.Message.From.Id : 
-                update.Message.From.Username
-            ;
-
-            var tipText = $"Received {update.Message.Text} from {from}.";
-
-            // show balloon tip to the user
-            this._tray.ShowBalloonTip(1750, this._tray.Text, tipText, ToolTipIcon.Info);
-
-            // read args from user
-            var args = update.Message.Text.SplitArgs();
-
-            Parser.Default.ParseArguments(args, this._commands)
-                .WithParsed<Plugin>((o) =>
-                {
-                    // initliaze plugin
-                    o.Initialize(Program.Services);
-
-                    // set callback for the command
-                    o.SetExecuteResultCallback(this.ExecuteResultCallback);
-
-                    // schedule the job to run
-                    o.SetExecutionSchedule();
-
-                    // execute command on a separate thread, "fire and forget"
-                    JobManager.Initialize(o);
-                })
-                .WithNotParsed((o) =>
-                {
-                    Console.WriteLine("Error");
-                });
+            catch (Exception ex)
+            {
+                // Log but don't throw - ensure handler doesn't crash
+                System.Diagnostics.Debug.WriteLine($"Error handling update: {ex.Message}");
+            }
         }
 
-        private void ExecuteResultCallback(ExecuteResult result)
+        /// <summary>
+        /// Handles polling errors from the Telegram bot client.
+        /// </summary>
+        public async Task HandlePollingErrorAsync(ITelegramBotClient client, Exception exception, CancellationToken cancellationToken)
         {
-            if (result.ResultType == ExecuteResultType.Text)
+            try
             {
-                // show balloon tip to the user
-                this._tray.ShowBalloonTip(1750, this._tray.Text, result.StatusText, ToolTipIcon.Info);
-
-                // send result to the user
-                AsyncContext.Run(async () =>
-                {
-                    await this._assistant.SendTextMessageAsync(
-                        this._update.Message.Chat.Id,
-                        result.StatusText,
-                        parseMode: ParseMode.Markdown
-                    );
-                });
+                var logPath = Sdk.PCManager.Combine("log.txt");
+                await System.IO.File.AppendAllTextAsync(
+                    logPath,
+                    $"[{DateTime.UtcNow:O}] Telegram polling error: {exception}\n"
+                );
             }
-            else if (result.ResultType == ExecuteResultType.Document)
+            catch
             {
-                AsyncContext.Run(async () =>
-                {
-                    var document = (result as ExecuteDocumentResult);
-
-                    // perform send
-                    await this._assistant.SendDocumentAsync(
-                        this._update.Message.Chat.Id,
-                        InputFile.FromStream(
-                            document.Stream, document.FileName
-                        )
-                    );
-                });
+                // Suppress logging errors
             }
-            else if (result.ResultType == ExecuteResultType.Image)
-            {
-                AsyncContext.Run(async () =>
-                {
-                    var image = (result as ExecuteImageResult);
+        }
 
-                    // perform send
-                    await this._assistant.SendPhotoAsync(
-                        this._update.Message.Chat.Id,
-                        InputFile.FromStream(
-                            image.Stream, image.FileName
-                        )
-                    );
+        /// <summary>
+        /// Builds the command processing pipeline with middleware.
+        /// </summary>
+        private ICommandPipeline BuildCommandPipeline(IServiceLocator services)
+        {
+            var pipeline = new CommandPipelineBuilder();
+
+            // Add middleware in order
+            var authMiddleware = new AuthorizationMiddleware();
+            var errorMiddleware = new ErrorHandlingMiddleware();
+            var dispatcher = new CommandDispatcher(services);
+
+            // Build the pipeline: Authorization -> Error Handling -> Dispatch
+            pipeline
+                .Use(authMiddleware.InvokeAsync)
+                .Use(errorMiddleware.InvokeAsync)
+                .Use(async (context, next) =>
+                {
+                    await dispatcher.DispatchAsync(context);
+                    await next();
                 });
-            }
+
+            return pipeline;
         }
     }
 }
