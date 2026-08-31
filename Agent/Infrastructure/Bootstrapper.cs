@@ -20,6 +20,7 @@ namespace Agent.Infrastructure
     {
         private IServiceLocator? _serviceLocator;
         private readonly Container _container;
+        private IPCAssistant? _telegramClient;
 
         public Bootstrapper()
         {
@@ -41,6 +42,10 @@ namespace Agent.Infrastructure
             // Initialize native dependencies
             InitializeNativeDependencies();
 
+            // Get Telegram bot token and create client
+            var token = GetTelegramToken();
+            _telegramClient = new PCAssistantClient(token);
+
             // Load plugins
             var plugins = LoadPlugins();
 
@@ -51,7 +56,21 @@ namespace Agent.Infrastructure
             var cpuidHelper = new CpuidHelper();
 
             // Register all services and plugins
-            dependencyContainer.RegisterApplicationServices(cpuidHelper, plugins);
+            dependencyContainer.RegisterApplicationServices(cpuidHelper, plugins, _telegramClient);
+
+            // Verify container configuration in debug mode
+#if DEBUG
+            try
+            {
+                dependencyContainer.Verify();
+                System.Diagnostics.Debug.WriteLine("✓ DI Container verification successful - all dependencies can be resolved");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠ DI Container verification failed: {ex.Message}");
+                throw;
+            }
+#endif
 
             // Create and store service locator
             _serviceLocator = dependencyContainer.GetServiceLocator();
@@ -158,12 +177,23 @@ namespace Agent.Infrastructure
         }
 
         /// <summary>
+        /// Gets the Telegram client instance.
+        /// Must be called after InitializeApplication().
+        /// </summary>
+        public IPCAssistant GetTelegramClient()
+        {
+            return _telegramClient ?? throw new InvalidOperationException(
+                "Application not initialized. Call InitializeApplication() first.");
+        }
+
+        /// <summary>
         /// Cleanly shuts down the application and releases resources.
         /// </summary>
         public void Shutdown()
         {
             try
             {
+                _telegramClient?.Cancel();
                 Cpuid64.Instance.Dispose();
             }
             catch (Exception ex)

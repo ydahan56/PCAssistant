@@ -1,3 +1,7 @@
+using Agent.Helpers;
+using Agent.Infrastructure.Configuration;
+using Agent.Infrastructure.Logging;
+using Agent.Infrastructure.Pipeline;
 using Hardware;
 using Sdk;
 using Sdk.Containers;
@@ -26,7 +30,7 @@ namespace Agent.Infrastructure
         /// <summary>
         /// Registers all application services and dependencies.
         /// </summary>
-        public void RegisterApplicationServices(ICpuidHelper cpuidHelper, List<IPlugin> plugins)
+        public void RegisterApplicationServices(ICpuidHelper cpuidHelper, List<IPlugin> plugins, IPCAssistant telegramClient)
         {
             if (cpuidHelper == null)
                 throw new ArgumentNullException(nameof(cpuidHelper));
@@ -34,11 +38,31 @@ namespace Agent.Infrastructure
             if (plugins == null)
                 throw new ArgumentNullException(nameof(plugins));
 
+            if (telegramClient == null)
+                throw new ArgumentNullException(nameof(telegramClient));
+
+            System.Diagnostics.Debug.WriteLine("=== Registering Application Services ===");
+
             // Register singleton services
             RegisterCoreServices(cpuidHelper);
 
+            // Register configuration
+            RegisterConfiguration();
+
+            // Register telegram client
+            RegisterTelegramServices(telegramClient);
+
+            // Register infrastructure services
+            RegisterInfrastructureServices();
+
+            // Register pipeline services
+            RegisterPipelineServices();
+
             // Register plugin instances
             RegisterPlugins(plugins);
+
+            System.Diagnostics.Debug.WriteLine($"✓ Registered {plugins.Count} plugins");
+            System.Diagnostics.Debug.WriteLine("=== Service Registration Complete ===");
 
             // Verify container configuration (optional - uncomment for strict validation)
             // _container.Verify();
@@ -52,12 +76,84 @@ namespace Agent.Infrastructure
             // Register CPUID helper as singleton
             _container.RegisterInstance(cpuidHelper);
 
-            // Register event aggregator as singleton (if not already registered)
+            // Register event aggregator as singleton
             var eventAggregator = EventAggregator.Instance;
             _container.RegisterInstance<EventAggregator>(eventAggregator);
 
             // Register Cpuid64 as singleton
             _container.RegisterInstance(Cpuid64.Instance);
+        }
+
+        /// <summary>
+        /// Registers configuration services.
+        /// </summary>
+        private void RegisterConfiguration()
+        {
+            // Register agent configuration as singleton
+            var config = AgentConfiguration.LoadFromEnvironment();
+            ConfigurationValidator.Validate(config);
+            _container.RegisterInstance(config);
+        }
+
+        /// <summary>
+        /// Registers Telegram-related services.
+        /// </summary>
+        private void RegisterTelegramServices(IPCAssistant telegramClient)
+        {
+            // Register Telegram client as singleton
+            _container.RegisterInstance<IPCAssistant>(telegramClient);
+        }
+
+        /// <summary>
+        /// Registers infrastructure services.
+        /// </summary>
+        private void RegisterInfrastructureServices()
+        {
+            // Register Main (ApplicationContext) as transient
+            _container.Register<Main>();
+
+            // Register message processor as singleton
+            _container.RegisterSingleton<TelegramMessageProcessor>();
+
+            // Register update handler as singleton
+            _container.RegisterSingleton<AgentUpdateHandler>();
+
+            // Register logger (if needed in future)
+            // _container.RegisterSingleton<ILogger, FileLogger>();
+        }
+
+        /// <summary>
+        /// Registers pipeline middleware and services.
+        /// </summary>
+        private void RegisterPipelineServices()
+        {
+            // Register middleware as singletons
+            _container.RegisterSingleton<AuthorizationMiddleware>();
+            _container.RegisterSingleton<ErrorHandlingMiddleware>();
+
+            // Register command dispatcher as singleton
+            _container.RegisterSingleton<CommandDispatcher>();
+
+            // Register pipeline factory
+            _container.Register<ICommandPipeline>(() =>
+            {
+                var pipeline = new CommandPipelineBuilder();
+                var authMiddleware = _container.GetInstance<AuthorizationMiddleware>();
+                var errorMiddleware = _container.GetInstance<ErrorHandlingMiddleware>();
+                var dispatcher = _container.GetInstance<CommandDispatcher>();
+
+                // Build the pipeline: Authorization -> Error Handling -> Dispatch
+                pipeline
+                    .Use(authMiddleware.InvokeAsync)
+                    .Use(errorMiddleware.InvokeAsync)
+                    .Use(async (context, next) =>
+                    {
+                        await dispatcher.DispatchAsync(context);
+                        await next();
+                    });
+
+                return pipeline;
+            }, Lifestyle.Singleton);
         }
 
         /// <summary>

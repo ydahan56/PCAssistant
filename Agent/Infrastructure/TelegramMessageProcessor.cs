@@ -16,17 +16,14 @@ namespace Agent.Infrastructure
     public class TelegramMessageProcessor
     {
         private readonly IPCAssistant _assistant;
-        private readonly NotifyIcon _tray;
         private readonly ICommandPipeline _pipeline;
         private Update? _currentUpdate;
 
         public TelegramMessageProcessor(
             IPCAssistant assistant,
-            NotifyIcon tray,
             ICommandPipeline pipeline)
         {
             _assistant = assistant ?? throw new ArgumentNullException(nameof(assistant));
-            _tray = tray ?? throw new ArgumentNullException(nameof(tray));
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
         }
 
@@ -52,8 +49,7 @@ namespace Agent.Infrastructure
 
             // Log the incoming command
             var displayName = string.IsNullOrWhiteSpace(username) ? userId.ToString() : username;
-            var tipText = $"Received '{commandText}' from {displayName}.";
-            _tray.ShowBalloonTip(1750, _tray.Text, tipText, ToolTipIcon.Info);
+            System.Diagnostics.Debug.WriteLine($"Received '{commandText}' from {displayName}.");
 
             // Parse arguments
             var args = commandText.SplitArgs();
@@ -120,9 +116,6 @@ namespace Agent.Infrastructure
 
             if (resultType == Sdk.Models.ExecuteResultType.Text)
             {
-                // Show balloon tip
-                _tray.ShowBalloonTip(1750, _tray.Text, context.ExecutionResult.StatusText, ToolTipIcon.Info);
-
                 // Send text message
                 await SendTextMessageAsync(context.ChatId, context.ExecutionResult.StatusText, context.MessageId);
             }

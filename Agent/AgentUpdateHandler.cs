@@ -18,13 +18,10 @@ namespace Agent
     {
         private readonly TelegramMessageProcessor _messageProcessor;
 
-        public AgentUpdateHandler(NotifyIcon tray, IPCAssistant assistant, IServiceLocator services)
+        public AgentUpdateHandler(
+            TelegramMessageProcessor messageProcessor)
         {
-            // Build the command processing pipeline
-            var pipeline = BuildCommandPipeline(services);
-
-            // Create message processor
-            _messageProcessor = new TelegramMessageProcessor(assistant, tray, pipeline);
+            _messageProcessor = messageProcessor ?? throw new ArgumentNullException(nameof(messageProcessor));
         }
 
         /// <summary>
@@ -65,31 +62,6 @@ namespace Agent
             {
                 // Suppress logging errors
             }
-        }
-
-        /// <summary>
-        /// Builds the command processing pipeline with middleware.
-        /// </summary>
-        private ICommandPipeline BuildCommandPipeline(IServiceLocator services)
-        {
-            var pipeline = new CommandPipelineBuilder();
-
-            // Add middleware in order
-            var authMiddleware = new AuthorizationMiddleware();
-            var errorMiddleware = new ErrorHandlingMiddleware();
-            var dispatcher = new CommandDispatcher(services);
-
-            // Build the pipeline: Authorization -> Error Handling -> Dispatch
-            pipeline
-                .Use(authMiddleware.InvokeAsync)
-                .Use(errorMiddleware.InvokeAsync)
-                .Use(async (context, next) =>
-                {
-                    await dispatcher.DispatchAsync(context);
-                    await next();
-                });
-
-            return pipeline;
         }
     }
 }

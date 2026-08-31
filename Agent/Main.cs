@@ -2,6 +2,7 @@ using Microsoft.VisualBasic.ApplicationServices;
 using FluentScheduler;
 using Hardware;
 using Sdk;
+using Sdk.Dependencies;
 using Sdk.Telegram;
 using Telegram.Bot;
 
@@ -13,10 +14,18 @@ namespace Agent
     /// </summary>
     public class Main : ApplicationContext
     {
-        public Main(IPCAssistant client)
+        private readonly NotifyIcon _tray;
+
+        public Main(IPCAssistant client, IServiceLocator services)
         {
+            if (client == null)
+                throw new ArgumentNullException(nameof(client));
+
+            if (services == null)
+                throw new ArgumentNullException(nameof(services));
+
             // Initialize system tray
-            var tray = new NotifyIcon()
+            _tray = new NotifyIcon()
             {
                 Icon = new Icon(PCManager.Combine("icon.ico")),
                 Text = "PCAssistant",
@@ -24,10 +33,19 @@ namespace Agent
             };
 
             // Create and initialize the startup sequence
-            var startup = new StartupSequence(client, tray);
+            var startup = new StartupSequence(client, _tray, services);
 
             // Schedule startup tasks with FluentScheduler
             JobManager.Initialize(startup, Cpuid64.Instance.GetRefreshJob());
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _tray?.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 
@@ -39,11 +57,13 @@ namespace Agent
     {
         private readonly IPCAssistant _client;
         private readonly NotifyIcon _tray;
+        private readonly IServiceLocator _services;
 
-        public StartupSequence(IPCAssistant client, NotifyIcon tray)
+        public StartupSequence(IPCAssistant client, NotifyIcon tray, IServiceLocator services)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _tray = tray ?? throw new ArgumentNullException(nameof(tray));
+            _services = services ?? throw new ArgumentNullException(nameof(services));
 
             // Schedule startup tasks
             this.Schedule(this.InitializeTelegramConnection).ToRunOnceIn(5).Seconds();
@@ -57,8 +77,8 @@ namespace Agent
         {
             try
             {
-                // Create update handler with reference to services
-                var updateHandler = new AgentUpdateHandler(_tray, _client, Program.Services);
+                // Resolve update handler from DI container
+                var updateHandler = _services.ResolveInstance<AgentUpdateHandler>();
 
                 // Start receiving updates from Telegram
                 _client.StartReceiving(updateHandler);

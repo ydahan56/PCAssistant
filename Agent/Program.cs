@@ -11,35 +11,44 @@ namespace Agent
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         public static extern bool SetProcessDPIAware();
 
-        public static IServiceLocator Services { get; private set; }
-
         [STAThread]
         static void Main()
         {
-            // Initialize the application using the bootstrapper
-            var bootstrapper = new Bootstrapper();
-            Services = bootstrapper.InitializeApplication();
+            System.Diagnostics.Debug.WriteLine("=== PCAssistant Agent Starting ===");
 
             // Enable high DPI support for proper screen capture on high-resolution displays
             SetProcessDPIAware();
 
-            // Get Telegram bot token
-            var token = bootstrapper.GetTelegramToken();
-
-            // Initialize Telegram 
-            var telegram = new PCAssistantClient(token);
+            // Initialize the bootstrapper and application
+            System.Diagnostics.Debug.WriteLine("Initializing bootstrapper...");
+            var bootstrapper = new Bootstrapper();
+            var services = bootstrapper.InitializeApplication();
+            System.Diagnostics.Debug.WriteLine("✓ Application initialized successfully");
 
             try
             {
+                // Resolve Main (ApplicationContext) from DI container
+                System.Diagnostics.Debug.WriteLine("Resolving application context from DI...");
+                var mainContext = services.ResolveInstance<Main>();
+                System.Diagnostics.Debug.WriteLine("✓ Application context resolved");
+
                 // Start the application's main message loop
-                Application.Run(new Main(telegram));
+                System.Diagnostics.Debug.WriteLine("Starting application message loop...");
+                Application.Run(mainContext);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"✗ Fatal error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                throw;
             }
             finally
             {
                 // Cleanup resources
-                telegram.Cancel();
+                System.Diagnostics.Debug.WriteLine("Shutting down application...");
                 JobManager.Stop();
                 bootstrapper.Shutdown();
+                System.Diagnostics.Debug.WriteLine("=== PCAssistant Agent Stopped ===");
             }
         }
     }

@@ -11,9 +11,11 @@ namespace Agent.Infrastructure.Pipeline
     {
         private readonly List<long> _whitelistedUserIds;
 
-        public AuthorizationMiddleware()
+        public AuthorizationMiddleware(AgentConfiguration config)
         {
-            var config = AgentConfiguration.LoadFromEnvironment();
+            if (config == null)
+                throw new ArgumentNullException(nameof(config));
+
             _whitelistedUserIds = config.GetAuthorizedUserIds();
         }
 
