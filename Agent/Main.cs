@@ -1,116 +1,93 @@
-using Microsoft.VisualBasic.ApplicationServices;
+﻿using DotNetEnv;
 using FluentScheduler;
 using Hardware;
+using Microsoft.VisualBasic.ApplicationServices;
+using Nito.AsyncEx;
 using Sdk;
-using Sdk.Dependencies;
 using Sdk.Telegram;
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Agent
 {
-    /// <summary>
-    /// Application context for the WinForms tray application.
-    /// Manages the system tray icon and initializes startup tasks.
-    /// </summary>
     public class Main : ApplicationContext
     {
-        private readonly NotifyIcon _tray;
-
-        public Main(IPCAssistant client, IServiceLocator services)
+        public Main(IPCAssistant client)
         {
-            if (client == null)
-                throw new ArgumentNullException(nameof(client));
-
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
-
-            // Initialize system tray
-            _tray = new NotifyIcon()
+            // init tray
+            var tray = new NotifyIcon()
             {
                 Icon = new Icon(PCManager.Combine("icon.ico")),
                 Text = "PCAssistant",
                 Visible = true
             };
 
-            // Create and initialize the startup sequence
-            var startup = new StartupSequence(client, _tray, services);
+            // create an instace of init job
+            var startup = new Startup(client, tray);
 
-            // Schedule startup tasks with FluentScheduler
+            // init startup and refresh job
             JobManager.Initialize(startup, Cpuid64.Instance.GetRefreshJob());
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _tray?.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 
-    /// <summary>
-    /// Manages the application startup sequence.
-    /// Handles Telegram connection initialization and UI updates.
-    /// </summary>
-    internal class StartupSequence : Registry
+    internal class Startup : Registry
     {
         private readonly IPCAssistant _client;
         private readonly NotifyIcon _tray;
-        private readonly IServiceLocator _services;
 
-        public StartupSequence(IPCAssistant client, NotifyIcon tray, IServiceLocator services)
+        public Startup(IPCAssistant client, NotifyIcon tray)
         {
-            _client = client ?? throw new ArgumentNullException(nameof(client));
-            _tray = tray ?? throw new ArgumentNullException(nameof(tray));
-            _services = services ?? throw new ArgumentNullException(nameof(services));
+            this._client = client;
+            this._tray = tray;
 
-            // Schedule startup tasks
-            this.Schedule(this.InitializeTelegramConnection).ToRunOnceIn(5).Seconds();
+            this.Schedule(this.StartClientListen).ToRunOnceIn(5).Seconds();
             this.Schedule(this.UpdateTrayCaption).ToRunOnceIn(2).Seconds();
+            //this.Schedule(this.NotifyClientHello).ToRunOnceIn(5).Seconds();
         }
 
-        /// <summary>
-        /// Initializes the Telegram bot connection and starts receiving updates.
-        /// </summary>
-        private void InitializeTelegramConnection()
+        private void StartClientListen()
         {
-            try
-            {
-                // Resolve update handler from DI container
-                var updateHandler = _services.ResolveInstance<AgentUpdateHandler>();
-
-                // Start receiving updates from Telegram
-                _client.StartReceiving(updateHandler);
-
-                System.Diagnostics.Debug.WriteLine("Telegram connection initialized successfully.");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error initializing Telegram connection: {ex.Message}");
-                _tray.ShowBalloonTip(3000, _tray.Text, "Failed to connect to Telegram.", ToolTipIcon.Error);
-            }
+            var update = new AgentUpdateHandler(this._tray, this._client);
+            this._client.StartReceiving(update);
         }
 
-        /// <summary>
-        /// Updates the tray icon caption with the bot's username.
-        /// </summary>
         private void UpdateTrayCaption()
         {
-            try
-            {
-                // Get bot information asynchronously
-                var user = Nito.AsyncEx.AsyncContext.Run(async () => await _client.GetMe());
+            // get current user
+            var user = AsyncContext.Run(
+                async () => await this._client.GetMeAsync()
+            );
 
-                // Update tray label with username
-                if (user?.Username != null)
+            // update tray label
+            this._tray.Text += $" - {user.Username}";
+        }
+
+        private void NotifyClientHello()
+        {
+            var whitelist = Env.GetString("whitelist")
+                .Split(",")
+                .Select(id =>
                 {
-                    _tray.Text += $" - {user.Username}";
-                }
-            }
-            catch (Exception ex)
+                    if (string.IsNullOrWhiteSpace(id))
+                        return new ChatId(0);
+
+                    var parsed = Convert.ToInt64(id);
+                    var chat = new ChatId(id);
+
+                    return chat;
+                })
+                .ToList();
+
+            foreach (ChatId chatId in whitelist) // todo - replace with an event
             {
-                System.Diagnostics.Debug.WriteLine($"Error updating tray caption: {ex.Message}");
+                AsyncContext.Run(
+                    async () => await this._client.SendTextMessageAsync(
+                        chatId,
+                        $"*{this._tray.Text}*: I'm Up.",
+                        parseMode: ParseMode.Markdown
+                    )
+                );
             }
         }
     }

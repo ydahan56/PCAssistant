@@ -1,5 +1,4 @@
-﻿using System.Net.Http;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -24,6 +23,8 @@ namespace Sdk.Telegram
         {
             var options = new ReceiverOptions()
             {
+                // todo - maybe in the future support more types?
+                // maybe accept a picture and analyze it with AI and extract parameters
                 AllowedUpdates = new UpdateType[] { UpdateType.Message }
             };
 

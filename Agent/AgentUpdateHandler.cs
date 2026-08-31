@@ -1,66 +1,165 @@
-using Agent.Infrastructure;
-using Agent.Infrastructure.Pipeline;
+﻿using CommandLine;
+using DotNetEnv;
+using FluentScheduler;
 using Sdk;
-using Sdk.Dependencies;
+using Sdk.Plugins;
+using Sdk.Contracts;
+using Sdk.Models;
 using Sdk.Telegram;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using Nito.AsyncEx;
+using Telegram.Bot.Types.Enums;
 
 namespace Agent
 {
-    /// <summary>
-    /// Handles Telegram bot update events.
-    /// Routes incoming messages through the command processing pipeline.
-    /// Implements IUpdateHandler for the Telegram Bot Client.
-    /// </summary>
     public class AgentUpdateHandler : IUpdateHandler
     {
-        private readonly TelegramMessageProcessor _messageProcessor;
+        private Update _update;
 
-        public AgentUpdateHandler(
-            TelegramMessageProcessor messageProcessor)
+        private readonly NotifyIcon _tray;
+        private readonly IPCAssistant _assistant;
+
+        private readonly List<long> _whitelist;
+        private readonly Type[] _commands;
+
+        public AgentUpdateHandler(NotifyIcon tray, IPCAssistant assistant)
         {
-            _messageProcessor = messageProcessor ?? throw new ArgumentNullException(nameof(messageProcessor));
+            this._tray = tray;
+            this._assistant = assistant;
+
+            //this._whitelist = Env.GetString("whitelist")
+            //    .Split(",")
+            //    .Select(id => {
+            //        if (string.IsNullOrWhiteSpace(id))
+            //            return new ChatId(0);
+
+            //        var parsed = Convert.ToInt64(id);
+            //        var chat = new ChatId(id);
+
+            //        return chat;
+            //    })
+            //    .ToList();
+
+            this._commands = Program.Services
+                .ResolveInstances<IPlugin>()
+                .Select(x => x.GetType())
+                .ToArray();
         }
 
-        /// <summary>
-        /// Handles incoming Telegram updates.
-        /// Delegates message processing to the message processor.
-        /// </summary>
+        public async Task HandlePollingErrorAsync(ITelegramBotClient client, Exception exception, CancellationToken cancellationToken)
+        {
+            await System.IO.File.AppendAllTextAsync(
+                PCManager.Combine("log.txt"),
+                exception.ToString() + Environment.NewLine
+            );
+        }
+
         public async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken cancellationToken)
         {
-            try
+            this._update = update;
+
+            //if (!this._whitelist.Contains(update.Message.From.Id))
+            //{
+            //    await client.SendTextMessageAsync(update.Message.Chat.Id, "Unauthorized.");
+
+            //    return;
+            //}
+
+            if (string.IsNullOrWhiteSpace(update.Message.Text))
             {
-                // Only process message updates
-                if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
+                await client.SendTextMessageAsync(
+                    update.Message.Chat.Id,
+                    "Unrecognized command.",
+                    replyToMessageId: update.Message.MessageId
+                );
+
+                return;
+            }
+
+
+            dynamic from = String.IsNullOrWhiteSpace(
+                update.Message.From.Username) ? 
+                update.Message.From.Id : 
+                update.Message.From.Username
+            ;
+
+            var tipText = $"Received {update.Message.Text} from {from}.";
+
+            // show balloon tip to the user
+            this._tray.ShowBalloonTip(1750, this._tray.Text, tipText, ToolTipIcon.Info);
+
+            // read args from user
+            var args = update.Message.Text.SplitArgs();
+
+            Parser.Default.ParseArguments(args, this._commands)
+                .WithParsed<Plugin>((o) =>
                 {
-                    await _messageProcessor.ProcessMessageAsync(update);
-                }
-            }
-            catch (Exception ex)
-            {
-                // Log but don't throw - ensure handler doesn't crash
-                System.Diagnostics.Debug.WriteLine($"Error handling update: {ex.Message}");
-            }
+                    // initliaze plugin
+                    o.Initialize(Program.Services);
+
+                    // set callback for the command
+                    o.SetExecuteResultCallback(this.ExecuteResultCallback);
+
+                    // schedule the job to run
+                    o.SetExecutionSchedule();
+
+                    // execute command on a separate thread, "fire and forget"
+                    JobManager.Initialize(o);
+                })
+                .WithNotParsed((o) =>
+                {
+                    Console.WriteLine("Error");
+                });
         }
 
-        /// <summary>
-        /// Handles polling errors from the Telegram bot client.
-        /// </summary>
-        public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
+        private void ExecuteResultCallback(ExecuteResult result)
         {
-            try
+            if (result.ResultType == ExecuteResultType.Text)
             {
-                var logPath = Sdk.PCManager.Combine("log.txt");
-                await System.IO.File.AppendAllTextAsync(
-                    logPath,
-                    $"[{DateTime.UtcNow:O}] Telegram polling error: {exception}\n"
-                );
+                // show balloon tip to the user
+                this._tray.ShowBalloonTip(1750, this._tray.Text, result.StatusText, ToolTipIcon.Info);
+
+                // send result to the user
+                AsyncContext.Run(async () =>
+                {
+                    await this._assistant.SendTextMessageAsync(
+                        this._update.Message.Chat.Id,
+                        result.StatusText,
+                        parseMode: ParseMode.Markdown
+                    );
+                });
             }
-            catch
+            else if (result.ResultType == ExecuteResultType.Document)
             {
-                // Suppress logging errors
+                AsyncContext.Run(async () =>
+                {
+                    var document = (result as ExecuteDocumentResult);
+
+                    // perform send
+                    await this._assistant.SendDocumentAsync(
+                        this._update.Message.Chat.Id,
+                        InputFile.FromStream(
+                            document.Stream, document.FileName
+                        )
+                    );
+                });
+            }
+            else if (result.ResultType == ExecuteResultType.Image)
+            {
+                AsyncContext.Run(async () =>
+                {
+                    var image = (result as ExecuteImageResult);
+
+                    // perform send
+                    await this._assistant.SendPhotoAsync(
+                        this._update.Message.Chat.Id,
+                        InputFile.FromStream(
+                            image.Stream, image.FileName
+                        )
+                    );
+                });
             }
         }
     }
