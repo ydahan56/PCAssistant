@@ -64,7 +64,7 @@ namespace lan.Operations
             var startInfo = new ProcessStartInfo
             {
                 FileName = programuri,
-                Arguments = $"/sxml \"{scanPath}\"",
+                Arguments = $"/sxml \"{scanpath}\"",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
@@ -92,11 +92,11 @@ namespace lan.Operations
                     // the newly scanned list (lastScan)
                     if (prevScan.Count == 0)
                     {
-                        prevScan.AddRange(ReadHosts(scanPath));
+                        prevScan.AddRange(ReadHosts(scanpath));
                     }
                     else
                     {
-                        lastScan.AddRange(ReadHosts(scanPath));
+                        lastScan.AddRange(ReadHosts(scanpath));
 
                         var connectedHosts = GetConnectedClients(prevScan, lastScan);
                         var disconnectedHosts = GetDisconnectedClients(prevScan, lastScan);

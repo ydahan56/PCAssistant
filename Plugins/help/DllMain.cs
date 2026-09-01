@@ -25,7 +25,7 @@ namespace help
 
         public override void Initialize(IServiceResolver service)
         {
-            var modules = service.ResolveCollection<IPlugin>();
+            var modules = service.ResolveInstances<IPlugin>();
 
             this.sb = new StringBuilder();
 

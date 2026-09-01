@@ -10,9 +10,6 @@ namespace exit
     {
         public override void Execute()
         {
-            var exit = new ExitJob();
-            JobManager.Initialize(exit);
-
             this.ExecuteResultCallback(
                 new ExecuteResult()
                 {
@@ -21,6 +18,9 @@ namespace exit
                     ResultType = ExecuteResultType.Text
                 }
             );
+
+            var exit = new ExitJob();
+            JobManager.Initialize(exit);
         }
     }
 }

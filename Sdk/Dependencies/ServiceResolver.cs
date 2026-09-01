@@ -15,5 +15,10 @@ namespace Sdk.Dependencies
         {
             return this._container.GetInstance<TService>();
         }
+
+        public IEnumerable<TService> ResolveInstances<TService>() where TService : class
+        {
+            return this._container.GetAllInstances<TService>();
+        }
     }
 }

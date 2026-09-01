@@ -8,13 +8,13 @@ namespace lan.Types
     {
         protected readonly string directoryuri;
         protected readonly string programuri;
-        protected readonly string scanPath;
+        protected readonly string scanpath;
 
         protected OperationBase()
         {
             this.directoryuri = AppDomain.CurrentDomain.BaseDirectory;
-            this.programuri = Path.Combine(this.directoryuri, "wnet.exe");
-            this.scanPath = Path.Combine(this.directoryuri, "networkscan.xml");
+            this.programuri = Path.Combine(this.directoryuri, "WNetWatcher.exe");
+            this.scanpath = Path.Combine(this.directoryuri, "networkscan.xml");
         }
 
         protected string CombineDirectory(string fileName)

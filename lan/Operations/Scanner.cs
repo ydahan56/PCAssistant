@@ -33,7 +33,7 @@ namespace lan.Operations
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = programuri,
-                    Arguments = $"/sxml \"{scanPath}\"",
+                    Arguments = $"/sxml \"{scanpath}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
@@ -58,14 +58,14 @@ namespace lan.Operations
                 }
 
                 // Check if scan file was created
-                if (!File.Exists(scanPath))
+                if (!File.Exists(scanpath))
                 {
                     RaiseFeedback("❌ Scan completed but no results file was created.");
                     return;
                 }
 
                 // Read and display discovered hosts
-                var hosts = ReadHosts(scanPath);
+                var hosts = ReadHosts(scanpath);
                 RaiseDiscovered(hosts);
             }
             catch (Exception ex)

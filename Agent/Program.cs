@@ -61,45 +61,51 @@ namespace Agent
             // init list
             var list = new List<IPlugin?>();
 
-            var pluginsDirPath = PCManager.Combine("..\\Plugins");
+            var moduleDirectory = PCManager.Combine("..\\Plugins");
 
-            if (!Directory.Exists(pluginsDirPath))
+            if (!Directory.Exists(moduleDirectory))
             {
-                throw new DirectoryNotFoundException(pluginsDirPath);
+                throw new DirectoryNotFoundException(moduleDirectory);
             }
 
-            var pluginsPaths = Directory.EnumerateFiles(
-                pluginsDirPath,
+            var Modules = Directory.EnumerateFiles(
+                moduleDirectory,
                 "*Plugin.dll",
                 SearchOption.AllDirectories
             ).ToList();
 
-            if (pluginsPaths.Count == 0)
+            if (Modules.Count == 0)
             {
                 return list;
             }
 
-            list = pluginsPaths
-                .Select(path =>
-                {
-                    return Assembly.LoadFrom(path).GetExportedTypes();
-                })
-                .Select(types =>
-                {
-                    return types.SingleOrDefault(type => type.Name == "DllMain");
-                })
-                .Select(type =>
-                {
-                    if (type == null)
-                    {
-                        return default;
-                    }
-
-                    return Activator.CreateInstance(type) as IPlugin;
-                })
-                .ToList();
-
+            list = Modules.Select(LoadAssembly).Select(FindEntrypoint).Select(CreateInstance).ToList();
             return list;
+        }
+
+        static Type[] LoadAssembly(string path)
+        {
+            var assembly = Assembly.LoadFrom(path);
+            return assembly.GetExportedTypes();
+        }
+
+        static Type? FindEntrypoint(Type[] types)
+        {
+            return types.SingleOrDefault(type => type.Name == "DllMain");
+        }
+
+        static IPlugin? CreateInstance(Type? type)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+            var instance = Activator.CreateInstance(type) as IPlugin;
+            if (instance == null)
+            {
+                throw new InvalidOperationException($"Failed to create an instance of type {type.FullName}.");
+            }
+            return instance;
         }
     }
 }

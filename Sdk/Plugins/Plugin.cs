@@ -35,24 +35,25 @@ namespace Sdk.Plugins
 
         public void SetExecutionSchedule()
         {
-            // Hours or Minutes could be "00", still affects the same
-            if (this.Hours > 0 || this.Minutes > 0)
-            {
-                this.Schedule(this).ToRunOnceAt(this.Hours, this.Minutes);
+            DateTime now = DateTime.Now;
 
-                return;
+            if (this.Hours > 0)
+            {
+                now = now.AddHours(this.Hours);
             }
 
-            // seconds?
+            if (this.Minutes > 0)
+            {
+                now = now.AddMinutes(this.Minutes);
+            }
+
             if (this.Seconds > 0)
             {
-                this.Schedule(this).ToRunOnceIn(this.Seconds).Seconds();
-
-                return;
+                now = now.AddSeconds(this.Seconds);
             }
 
             // no delay? execute now
-            this.Schedule(this).ToRunNow();
+            this.Schedule(this).ToRunOnceAt(now);
         }
     }
 }
