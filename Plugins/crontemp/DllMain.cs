@@ -141,14 +141,10 @@ namespace crontemp
 
         public override void Initialize(IServiceResolver service)
         {
-            var CpuidHelper = service.ResolveInstance<IHardwareCapability>();
+            var hardwareCapability = service.ResolveInstance<IHardwareCapability>();
 
             // fill class field with devices
-            this._devices = CpuidHelper
-                .GetProcessors()
-                .Concat(
-                    CpuidHelper.GetDisplayAdapters()
-                ).ToList();
+            this._devices = hardwareCapability.GetProcessors().Concat(hardwareCapability.GetDisplayAdapters()).ToList();
         }
     }
 }

@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sdk\Sdk.csproj" />
+    <ProjectReference Include="..\..\Sdk\Sdk.csproj" />
   </ItemGroup>
 
   <ItemGroup>

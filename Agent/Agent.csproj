@@ -12,7 +12,8 @@
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
-  <ItemGroup>
+
+	<ItemGroup>
     <None Remove="cpuidsdk64.dll" />
   </ItemGroup>
 

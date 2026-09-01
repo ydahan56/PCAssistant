@@ -1,4 +1,5 @@
 ﻿using lan.Models;
+using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
 
@@ -6,20 +7,31 @@ namespace lan.Types
 {
     public abstract class OperationBase
     {
-        protected readonly string directoryuri;
+        //protected readonly string directoryuri;
         protected readonly string programuri;
         protected readonly string scanpath;
 
         protected OperationBase()
         {
-            this.directoryuri = AppDomain.CurrentDomain.BaseDirectory;
-            this.programuri = Path.Combine(this.directoryuri, "WNetWatcher.exe");
-            this.scanpath = Path.Combine(this.directoryuri, "networkscan.xml");
+            //this.directoryuri = AppDomain.CurrentDomain.BaseDirectory;
+            this.programuri = Path.Combine(AssemblyDirectory, "WNetWatcher.exe");
+            this.scanpath = Path.Combine(AssemblyDirectory, "networkscan.csv");
+        }
+
+        private string AssemblyDirectory
+        {
+            get
+            {
+                string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                UriBuilder uri = new UriBuilder(codeBase);
+                string path = Uri.UnescapeDataString(uri.Path);
+                return Path.GetDirectoryName(path);
+            }
         }
 
         protected string CombineDirectory(string fileName)
         {
-            return Path.Combine(this.directoryuri, fileName);
+            return Path.Combine(AssemblyDirectory, fileName);
         }
 
         protected List<Host> ReadHosts(string path)
