@@ -32,14 +32,15 @@ namespace prtsc
                 buffer.Position = 0;
 
                 // send frame to client
-                this.ExecuteResultCallback(
-                    new ExecuteImageResult()
-                    {
-                        Success = true,
-                        FileName = fileName,
-                        Stream = buffer
-                    }
-                );
+                var context = new ImageContext()
+                {
+                    FileName = fileName,
+                    Stream = buffer,
+                    IsErrorSuccess = true,
+                    ChatId = this.ExecuteContext.ChatId,
+                    ReplyParameters = this.ExecuteContext.ReplyParameters
+                };
+                this.ExecuteContextCallback(context);
             }
         }
     }

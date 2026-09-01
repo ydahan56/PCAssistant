@@ -25,13 +25,10 @@ namespace kill
             }
             catch (Exception e)
             {
-                this.ExecuteResultCallback(
-                    new ExecuteResult()
-                    {
-                        StatusText = e.Message,
-                        Success = success
-                    }
-                );
+                this.ExecuteContext.ErrorMessage = e.Message;
+                this.ExecuteContext.IsErrorSuccess = success;
+                this.ExecuteContext.ResultType = ExecuteResultType.Text;
+                this.ExecuteContextCallback(this.ExecuteContext);
 
                 // exception occured, exit...
                 return;
@@ -50,13 +47,10 @@ namespace kill
                 text = e.Message;
             }
 
-            this.ExecuteResultCallback(
-                new ExecuteResult()
-                {
-                    StatusText = text,
-                    Success = success
-                }
-            );
+            this.ExecuteContext.ErrorMessage = text;
+            this.ExecuteContext.IsErrorSuccess = success;
+            this.ExecuteContext.ResultType = ExecuteResultType.Text;
+            this.ExecuteContextCallback(this.ExecuteContext);
         }
     }
 }

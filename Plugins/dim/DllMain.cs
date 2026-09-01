@@ -33,13 +33,9 @@ namespace dim
                 .SetArgument(this.BrightnessValue)
                 .ExecuteScript();
 
-            this.ExecuteResultCallback?.Invoke(
-                new ExecuteResult()
-                {
-                    StatusText = result,
-                    Success = true
-                }
-            );
+            this.ExecuteContext.ErrorMessage = result;
+            this.ExecuteContext.IsErrorSuccess = true;
+            this.ExecuteContextCallback(this.ExecuteContext);
         }
     }
 }

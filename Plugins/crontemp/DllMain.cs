@@ -48,14 +48,9 @@ namespace crontemp
             // check if an existing Job is already running
             if (this.IsCronJobActive)
             {
-                this.ExecuteResultCallback(
-                    new ExecuteResult()
-                    {
-                        StatusText = $"{this._nameOfClass} Job with id {this._cronJobId} is already running.",
-                        Success = true
-                    }
-                );
-
+                this.ExecuteContext.ErrorMessage = $"{this._nameOfClass} Job with id {this._cronJobId} is already running.";
+                this.ExecuteContext.IsErrorSuccess = true;
+                this.ExecuteContextCallback(this.ExecuteContext);
                 return;
             }
 
@@ -74,19 +69,14 @@ namespace crontemp
             JobManager.Initialize(_cronJob);
 
             // update client
-            this.ExecuteResultCallback(
-                new ExecuteResult()
-                {
-                    StatusText = string.Format(
-                        this._rm.GetString("SUCCESS_ERRORMESSAGE"),
-                        this._cronJobId,
-                        this.Total,
-                        this.Timeout
-                    ),
-                    Success = true
-                }
+            this.ExecuteContext.ErrorMessage = string.Format(
+                this._rm.GetString("SUCCESS_ERRORMESSAGE"),
+                this._cronJobId,
+                this.Total,
+                this.Timeout
             );
-
+            this.ExecuteContext.IsErrorSuccess = true;
+            this.ExecuteContextCallback(this.ExecuteContext);
         }
 
         private StringBuilder updateMessageBuilder = new StringBuilder();
@@ -123,11 +113,11 @@ namespace crontemp
                 this.updateMessageBuilder.AppendLine("\nFrom *PCAssistant*");
 
                 // update client
-                this.ExecuteResultCallback(
-                    new ExecuteResult()
+                this.ExecuteContextCallback(
+                    new ExecuteContext()
                     {
-                        StatusText = this.updateMessageBuilder.ToString(),
-                        Success = true
+                        ErrorMessage = this.updateMessageBuilder.ToString(),
+                        IsErrorSuccess = true
                     }
                 );
 
@@ -139,12 +129,13 @@ namespace crontemp
             }
         }
 
-        public override void Initialize(IServiceResolver service)
+        public override IPlugin Initialize(IServiceResolver service)
         {
             var hardwareCapability = service.ResolveInstance<IHardwareCapability>();
 
             // fill class field with devices
             this._devices = hardwareCapability.GetProcessors().Concat(hardwareCapability.GetDisplayAdapters()).ToList();
+            return this;
         }
     }
 }

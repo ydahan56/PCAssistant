@@ -5,6 +5,7 @@
         Text,
         Stream,
         Document,
-        Image
+        Image,
+        Unknown
     }
 }

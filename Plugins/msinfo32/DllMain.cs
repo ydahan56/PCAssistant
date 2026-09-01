@@ -35,21 +35,22 @@ namespace msinfo32
             // obtain handle to file
             var fs = new FileStream(filePath, FileMode.Open);
 
-            this.ExecuteResultCallback(
-                new ExecuteDocumentResult()
-                {
-                    FileName = Path.GetFileName(filePath),
-                    Stream = fs,
-                    Success = true
-                }
-            );
+            var context = new StreamContext()
+            {
+                FileName = Path.GetFileName(filePath),
+                Stream = fs,
+                IsErrorSuccess = true,
+                ChatId = this.ExecuteContext.ChatId,
+                ReplyParameters = this.ExecuteContext.ReplyParameters
+            };
+            this.ExecuteContextCallback(context);
 
             // release fs
             fs.Close();
             fs.Dispose();
         }
 
-        public override void Initialize(IServiceResolver service)
+        public override IPlugin Initialize(IServiceResolver service)
         {
             var cpuidHelper = service.ResolveInstance<IHardwareCapability>();
 
@@ -65,6 +66,8 @@ namespace msinfo32
                 new IPv4WanComponent(),
                 new UpTimeComponnet()
             };
+
+            return this;
         }
     }
 }

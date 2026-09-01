@@ -11,23 +11,21 @@ namespace help
     [Verb("/help", HelpText = "List of available commands.")]
     public class DllMain : Plugin
     {
-        private StringBuilder sb;
+        private StringBuilder builder;
 
         public override void Execute()
         {
-            this.ExecuteResultCallback(
-                new ExecuteResult()
-                {
-                    StatusText = sb.ToString().TrimEnd()
-                }
-            );
+            this.ExecuteContext.ErrorMessage = builder.ToString().TrimEnd();
+            this.ExecuteContext.IsErrorSuccess = true;
+            this.ExecuteContext.ResultType = ExecuteResultType.Text;
+            this.ExecuteContextCallback(this.ExecuteContext);
         }
 
-        public override void Initialize(IServiceResolver service)
+        public override IPlugin Initialize(IServiceResolver service)
         {
             var modules = service.ResolveInstances<IPlugin>();
 
-            this.sb = new StringBuilder();
+            this.builder = new StringBuilder();
 
             // Iterate over each module (plugin)
             foreach (IPlugin module in modules)
@@ -38,7 +36,7 @@ namespace help
                 // Display the verb (command)
                 if (verbAttr != null)
                 {
-                    sb.AppendLine($"{verbAttr.Name}: {verbAttr.HelpText}");
+                    builder.AppendLine($"{verbAttr.Name}: {verbAttr.HelpText}");
 
                     // Get and display the options for each verb
                     var options = type.GetProperties()
@@ -47,10 +45,12 @@ namespace help
                     foreach (var option in options)
                     {
                         var optionAttr = option.GetCustomAttribute<OptionAttribute>();
-                        sb.AppendLine($"  --{optionAttr.LongName ?? optionAttr.ShortName.ToString()} ({optionAttr.HelpText})");
+                        builder.AppendLine($"  --{optionAttr.LongName ?? optionAttr.ShortName.ToString()} ({optionAttr.HelpText})");
                     }
                 }
             }
+
+            return this;
         }
 
     }

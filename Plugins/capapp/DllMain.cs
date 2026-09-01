@@ -30,15 +30,10 @@ namespace capapp
             }
             catch (Exception e)
             {
-                this.ExecuteResultCallback(
-                    new ExecuteResult()
-                    {
-                        StatusText = e.Message,
-                        Success = false,
-                        ResultType = ExecuteResultType.Text
-                    }
-                );
-
+                this.ExecuteContext.ErrorMessage = e.Message;
+                this.ExecuteContext.IsErrorSuccess = false;
+                this.ExecuteContext.ResultType = ExecuteResultType.Text;
+                this.ExecuteContextCallback(this.ExecuteContext);
                 return;
             }
 
@@ -50,10 +45,10 @@ namespace capapp
 
             ms.Position = 0;
 
-            this.ExecuteResultCallback(
-                new ExecuteImageResult()
+            this.ExecuteContextCallback(
+                new ImageContext()
                 {
-                    Success = true,
+                    IsErrorSuccess = true,
                     Stream = ms,
                     FileName = fileName
                 }

@@ -1,12 +1,14 @@
 using Agent.Hardware;
 using Agent.Notification;
 using Agent.Startup;
+using Common.Queue;
 using DotNetEnv;
 using Easy.MessageHub;
 using FluentScheduler;
 using Hardware;
 using Sdk;
 using Sdk.Contracts;
+using Sdk.Models;
 using Sdk.Telegram;
 using SimpleInjector;
 using System.Reflection;
@@ -43,6 +45,7 @@ namespace Agent
                 return new PCAssistantClient(token);
             });
             IOC.RegisterSingleton<IHardwareCapability>(() => new HardwareCapability());
+            IOC.RegisterSingleton<ISimpleMessageQueue<ExecuteContext>, ExecutionMessageQueue>();
 
             var modules = EnumeratePlugins();
             IOC.Collection.Register<IPlugin>(modules);

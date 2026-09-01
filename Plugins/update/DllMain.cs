@@ -1,5 +1,8 @@
 ﻿using AutoUpdaterDotNET;
 using CommandLine;
+using Easy.MessageHub;
+using Sdk.Contracts;
+using Sdk.Dependencies;
 using Sdk.Hub;
 using Sdk.Models;
 using Sdk.Plugins;
@@ -11,6 +14,7 @@ namespace update
     [Verb("/update", HelpText = "This command allows to check or download an update")]
     public class DllMain : Plugin
     {
+        private IMessageHub _hub;
         private readonly ResourceManager _rm;
 
         [Option("download", Required = false, HelpText = "Download an update")]
@@ -42,11 +46,11 @@ namespace update
             {
                 if (_isDownloadEnabled)
                 {
-                    this.ExecuteResultCallback(
-                        new ExecuteResult()
+                    this.ExecuteContextCallback(
+                        new ExecuteContext()
                         {
-                            StatusText = "PCAssistant is updating...",
-                            Success = true
+                            ErrorMessage = "PCAssistant is updating...",
+                            IsErrorSuccess = true
                         }
                     );
 
@@ -54,7 +58,7 @@ namespace update
 
                     if (updateSuccess)
                     {
-                        EventAggregator.Instance.MessageHub.Publish(ApplicationEvent.Exit);
+                        this._hub.Publish(ApplicationEvent.Exit);
                     }
 
                     // we don't need to reset flag, we restart the client anyways
@@ -62,22 +66,22 @@ namespace update
                     return;
                 }
 
-                this.ExecuteResultCallback(
-                    new ExecuteResult()
+                this.ExecuteContextCallback(
+                    new ExecuteContext()
                     {
-                        StatusText = $"A new version {e.CurrentVersion} of PCAssistant is available!",
-                        Success = true
+                        ErrorMessage = $"A new version {e.CurrentVersion} of PCAssistant is available!",
+                        IsErrorSuccess = true
                     }
                 );
 
                 return;
             }
 
-            this.ExecuteResultCallback(
-                new ExecuteResult()
+            this.ExecuteContextCallback(
+                new ExecuteContext()
                 {
-                    StatusText = "You're currently running the latest version of PCAssistant.",
-                    Success = true
+                    ErrorMessage = "You're currently running the latest version of PCAssistant.",
+                    IsErrorSuccess = true
                 }
             );
         }
@@ -86,11 +90,11 @@ namespace update
         {
             if (this.Check)
             {
-                this.ExecuteResultCallback(
-                    new ExecuteResult()
+                this.ExecuteContextCallback(
+                    new ExecuteContext()
                     {
-                        StatusText = "Checking for updates...",
-                        Success = true
+                        ErrorMessage = "Checking for updates...",
+                        IsErrorSuccess = true
                     }
                 );
 
@@ -111,6 +115,12 @@ namespace update
 
                 return;
             }
+        }
+
+        public override IPlugin Initialize(IServiceResolver services)
+        {
+            this._hub = services.ResolveInstance<IMessageHub>();
+            return this;
         }
     }
 }

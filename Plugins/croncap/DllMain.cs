@@ -44,11 +44,11 @@ namespace croncap
             // check if an existing Job is already running
             if (this.IsCronJobActive)
             {
-                this.ExecuteResultCallback(
-                    new ExecuteResult()
+                this.ExecuteContextCallback(
+                    new ExecuteContext()
                     {
-                        StatusText = $"{this._nameOfClass} Job with id {this._cronJobId} is already running.",
-                        Success = true
+                        ErrorMessage = $"{this._nameOfClass} Job with id {this._cronJobId} is already running.",
+                        IsErrorSuccess = true
                     }
                 );
 
@@ -68,19 +68,12 @@ namespace croncap
             // fire Job
             JobManager.Initialize(_cronJob);
 
-            // update client
-            this.ExecuteResultCallback(
-                new ExecuteResult()
-                {
-                    StatusText = string.Format(
-                        this._rm.GetString("SUCCESS_ERRORMESSAGE"),
-                        this._cronJobId,
-                        this.Total,
-                        this.Timeout
-                    ),
-                    Success = true
-                }
+            this.ExecuteContext.ErrorMessage = string.Format(
+                this._rm.GetString("SUCCESS_ERRORMESSAGE"),
+                this._cronJobId, this.Total, this.Timeout
             );
+            this.ExecuteContext.IsErrorSuccess = true;
+            this.ExecuteContextCallback(this.ExecuteContext);
         }
 
         private StringBuilder updateMessageBuilder = new StringBuilder();
@@ -114,13 +107,13 @@ namespace croncap
                 var fileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + ".png";
 
                 // update client
-                this.ExecuteResultCallback(
-                    new ExecuteImageResult()
+                this.ExecuteContextCallback(
+                    new ImageContext()
                     {
                         FileName = fileName,
                         Stream = ms,
-                        StatusText = this.updateMessageBuilder.ToString(),
-                        Success = true
+                        ErrorMessage = this.updateMessageBuilder.ToString(),
+                        IsErrorSuccess = true
                     }
                 );
 

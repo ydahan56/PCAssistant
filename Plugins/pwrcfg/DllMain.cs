@@ -19,13 +19,10 @@ namespace pwrcfg
 
         public override void Execute()
         {
-            this.ExecuteResultCallback(
-                new ExecuteResult()
-                {
-                    StatusText = $"Workstation is preparing to {this.State} within {this.Timeout} seconds..",
-                    Success = true
-                }
-            );
+            this.ExecuteContext.ErrorMessage = $"Workstation is preparing to {this.State} within {this.Timeout} seconds..";
+            this.ExecuteContext.IsErrorSuccess = true;
+            this.ExecuteContext.ResultType = ExecuteResultType.Text;
+            this.ExecuteContextCallback(this.ExecuteContext);
 
             // create default registry
             Registry registry = new Registry();

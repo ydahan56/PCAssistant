@@ -26,14 +26,10 @@ namespace apps
                 text = background.ToString();
             }
 
-            this.ExecuteResultCallback(
-                new ExecuteResult()
-                {
-                    Success = true,
-                    StatusText = text,
-                    ResultType = ExecuteResultType.Text
-                }
-            );
+            this.ExecuteContext.IsErrorSuccess = true;
+            this.ExecuteContext.ErrorMessage = text;
+            this.ExecuteContext.ResultType = ExecuteResultType.Text;
+            this.ExecuteContextCallback(this.ExecuteContext);
         }
     }
 }

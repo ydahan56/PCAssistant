@@ -19,13 +19,10 @@ namespace alert
 
         public override void Execute()
         {
-            this.ExecuteResultCallback(
-                new ExecuteResult()
-                {
-                    StatusText = "Alert has been displayed.",
-                    Success = true
-                }
-            );
+            this.ExecuteContext.ErrorMessage = "Alert has been displayed.";
+            this.ExecuteContext.IsErrorSuccess = true;
+            this.ExecuteContext.ResultType = ExecuteResultType.Text;
+            this.ExecuteContextCallback(this.ExecuteContext);
 
             MessageBox.Show(
                 this.Text,

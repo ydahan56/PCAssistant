@@ -21,13 +21,10 @@ namespace display
                 Convert.ToBoolean(this.Enabled) ? -1 : 2
             );
 
-            this.ExecuteResultCallback(
-                new ExecuteResult()
-                {
-                    StatusText = $"PostMessage returned with status code {statusCode}",
-                    Success = true
-                }
-            );
+            this.ExecuteContext.ErrorMessage = $"PostMessage returned with status code {statusCode}";
+            this.ExecuteContext.IsErrorSuccess = true;
+            this.ExecuteContext.ResultType = ExecuteResultType.Text;
+            this.ExecuteContextCallback(this.ExecuteContext);
         }
     }
 }

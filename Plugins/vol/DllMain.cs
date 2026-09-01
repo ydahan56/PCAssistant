@@ -29,27 +29,21 @@ namespace volume
         {
             if (!this._utility.Exists)
             {
-                // return answer back to caller
-                this.ExecuteResultCallback(
-                    new ExecuteResult()
-                    {
-                        Success = false,
-                        StatusText = $"{this._utility.Name} does not exists"
-                    }
-                );
-
-                // exit
+                this.ExecuteContext.IsErrorSuccess = false;
+                this.ExecuteContext.ErrorMessage = $"{this._utility.Name} does not exists";
+                this.ExecuteContext.ResultType = ExecuteResultType.Text;
+                this.ExecuteContextCallback(this.ExecuteContext);
                 return;
             }
 
             if (VolumeValue < 1 || VolumeValue > 100)
             {
                 // return answer back to caller
-                this.ExecuteResultCallback(
-                    new ExecuteResult()
+                this.ExecuteContextCallback(
+                    new ExecuteContext()
                     {
-                        Success = false,
-                        StatusText = $"Value cannot be {this.VolumeValue}, must be between 1-100"
+                        IsErrorSuccess = false,
+                        ErrorMessage = $"Value cannot be {this.VolumeValue}, must be between 1-100"
                     }
                 );
 
@@ -62,13 +56,10 @@ namespace volume
                 .SetVolume(this.VolumeValue)
                 .Execute();
 
-            this.ExecuteResultCallback(
-                new ExecuteResult()
-                {
-                    Success = success,
-                    StatusText = $"Volume has been set to value {this.VolumeValue}"
-                }
-            );
+            this.ExecuteContext.IsErrorSuccess = success;
+            this.ExecuteContext.ErrorMessage = $"Volume has been set to value {this.VolumeValue}";
+            this.ExecuteContext.ResultType = ExecuteResultType.Text;
+            this.ExecuteContextCallback(this.ExecuteContext);
         }
     }
 }

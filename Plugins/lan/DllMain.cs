@@ -65,14 +65,10 @@ namespace lan
 
         private void UpdateAvailable(string update)
         {
-            var result = new ExecuteResult
-            {
-                StatusText = update,
-                ResultType = ExecuteResultType.Text,
-                Success = true
-            };
-
-            ExecuteResultCallback(result);
+            this.ExecuteContext.ErrorMessage = update;
+            this.ExecuteContext.ResultType = ExecuteResultType.Text;
+            this.ExecuteContext.IsErrorSuccess = true;
+            this.ExecuteContextCallback(this.ExecuteContext);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace Sdk.Plugins
 {
     public abstract class Plugin : Registry, IPlugin, IJob
     {
-        protected Action<ExecuteResult> ExecuteResultCallback;
+        protected Action<ExecuteContext> ExecuteContextCallback;
 
 
         [Option("hours", HelpText = "Hours till command execution.")]
@@ -20,20 +20,29 @@ namespace Sdk.Plugins
         [Option("seconds", HelpText = "Seconds till command execution.")]
         public int Seconds { get; set; }
 
+        protected ExecuteContext ExecuteContext { get; private set; }
 
         public abstract void Execute();
 
-        public virtual void Initialize(IServiceResolver services)
+        public IPlugin SetExecuteContext(ExecuteContext context)
+        {
+            this.ExecuteContext = context;
+            return this;
+        }
+
+        public virtual IPlugin Initialize(IServiceResolver services)
         {
             // throw new NotImplementedException();
+            return this;
         }
 
-        public virtual void SetExecuteResultCallback(Action<ExecuteResult> callback)
+        public virtual IPlugin SetExecuteResultCallback(Action<ExecuteContext> callback)
         {
-            this.ExecuteResultCallback = callback;
+            this.ExecuteContextCallback = callback;
+            return this;
         }
 
-        public void SetExecutionSchedule()
+        public IPlugin SetExecutionSchedule()
         {
             DateTime now = DateTime.Now;
 
@@ -54,6 +63,7 @@ namespace Sdk.Plugins
 
             // no delay? execute now
             this.Schedule(this).ToRunOnceAt(now);
+            return this;
         }
     }
 }
