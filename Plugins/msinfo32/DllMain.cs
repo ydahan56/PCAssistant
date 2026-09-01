@@ -1,11 +1,10 @@
 ﻿using CommandLine;
 using msinfo32.Components;
 using Sdk;
-using Sdk.Plugins;
 using Sdk.Contracts;
 using Sdk.Dependencies;
 using Sdk.Models;
-using Sdk.Telegram;
+using Sdk.Plugins;
 using System.Text;
 
 namespace msinfo32
@@ -26,7 +25,7 @@ namespace msinfo32
 
             // get file path
             var filePath = PCManager.CombineAssembly(
-                this.GetType().Assembly, 
+                this.GetType().Assembly,
                 "msinfo32.txt"
             );
 
@@ -50,9 +49,9 @@ namespace msinfo32
             fs.Dispose();
         }
 
-        public override void Initialize(IServiceLocator service)
+        public override void Initialize(IServiceResolver service)
         {
-            var cpuidHelper = service.ResolveInstance<ICpuidHelper>();
+            var cpuidHelper = service.ResolveInstance<IHardwareCapability>();
 
             var _devices = cpuidHelper.GetProcessors()
                    .Concat(cpuidHelper.GetDisplayAdapters())

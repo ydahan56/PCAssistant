@@ -1,42 +1,50 @@
 ﻿using lan.Models;
 using lan.Types;
-using System.ComponentModel;
 using System.Diagnostics;
 
 namespace lan.Operations
 {
     public class Listener : OperationBase
     {
-        private Process scanner;
+        private Process? scanner;
         private bool _cancel;
+        private bool _active;
 
-        private Thread worker;
-        private Thread _cancelthr;
+        private Thread? worker;
+        private Thread? _cancelthr;
 
         private readonly Action<string> _updateAvailable;
-
-
         private readonly object _cancel_lock = new object();
 
-        public Listener(Action<string> updateAvailable)
+        public Listener(Action<string> updateAvailable) : base()
         {
-            this._updateAvailable = updateAvailable;
-            this.worker = new Thread(this.WorkerProc);
-            this._cancelthr = new Thread(this.CancelProc);
+            _updateAvailable = updateAvailable ?? throw new ArgumentNullException(nameof(updateAvailable));
         }
 
-        private void CancelProc(object? obj)
+        protected override void RaiseFeedback(string message)
         {
-            while (true) 
-            {
-                if (this._cancel)
-                {
-                    lock (this._cancel_lock)
-                    {
-                        if (this.scanner.HasExited)
-                            break;
+            _updateAvailable?.Invoke(message);
+        }
 
-                        this.scanner.Kill();
+        private void CancelProc()
+        {
+            while (true)
+            {
+                if (_cancel)
+                {
+                    lock (_cancel_lock)
+                    {
+                        if (scanner != null)
+                        {
+                            if (!scanner.HasExited)
+                            {
+                                try
+                                {
+                                    scanner.Kill();
+                                }
+                                catch { }
+                            }
+                        }
                         break; // exit the thread
                     }
                 }
@@ -45,52 +53,76 @@ namespace lan.Operations
             }
         }
 
-        private void WorkerProc(object? obj)
+        private void WorkerProc()
         {
-            var startinfo = new ProcessStartInfo(programuri, $"/sxml {AppDomain.CurrentDomain.BaseDirectory}");
+            if (!File.Exists(programuri))
+            {
+                RaiseFeedback($"❌ Network scanner not found: {programuri}");
+                return;
+            }
 
-            this._updateAvailable("Network monitor is now listening...");
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = programuri,
+                Arguments = $"/sxml \"{scanPath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+
+            RaiseFeedback("👂 Network monitor is now listening...");
 
             List<Host> prevScan = new List<Host>();
             List<Host> lastScan = new List<Host>();
 
-            while (!this._cancel)
+            while (!_cancel)
             {
-                lock (this._cancel_lock)
+                try
                 {
-                    scanner = Process.Start(startinfo);
-                    scanner.WaitForExit();
+                    lock (_cancel_lock)
+                    {
+                        if (_cancel) break;
+
+                        scanner = Process.Start(startInfo);
+                        scanner?.WaitForExit(60000); // 1 minute timeout
+                    }
+
+                    // initiate a first scan so we have a list (prevScan) to compare 
+                    // the newly scanned list (lastScan)
+                    if (prevScan.Count == 0)
+                    {
+                        prevScan.AddRange(ReadHosts(scanPath));
+                    }
+                    else
+                    {
+                        lastScan.AddRange(ReadHosts(scanPath));
+
+                        var connectedHosts = GetConnectedClients(prevScan, lastScan);
+                        var disconnectedHosts = GetDisconnectedClients(prevScan, lastScan);
+
+                        if (connectedHosts.Count > 0)
+                            RaiseConnected(connectedHosts);
+
+                        if (disconnectedHosts.Count > 0)
+                            RaiseDisconnected(disconnectedHosts);
+
+                        prevScan.Clear();
+                        prevScan.AddRange(lastScan);
+
+                        lastScan.Clear();
+                    }
                 }
-               
-                // initiate a first scan so we have a list (prevScan) to compare 
-                // the newely scanned list (lastScan)
-                if (prevScan.Count == 0)
+                catch (Exception ex)
                 {
-                    prevScan.AddRange(ReadHosts(this.programuri));
-                }
-                else
-                {
-                    lastScan.AddRange(ReadHosts(scanPath));
-
-                    var connectedHosts = GetConnectedClients(prevScan, lastScan);
-                    var disconnectedHosts = GetDisconnectedClients(prevScan, lastScan);
-
-                    if (connectedHosts.Count > 0)
-                        RaiseConnected(connectedHosts);
-
-                    if (disconnectedHosts.Count > 0)
-                        RaiseDisconnected(disconnectedHosts);
-
-                    prevScan.Clear();
-                    prevScan.AddRange(lastScan);
-
-                    lastScan.Clear();
+                    RaiseFeedback($"⚠️ Monitoring error: {ex.Message}");
                 }
 
-                Thread.Sleep(3000);
+                Thread.Sleep(3000); // Wait 3 seconds between scans
             }
 
-            RaiseFeedback("Network monitoring disconnected.");
+            _active = false;
+            RaiseFeedback("🛑 Network monitoring stopped.");
         }
 
         private List<Host> GetConnectedClients(List<Host> prevScan, List<Host> lastScan)
@@ -103,33 +135,49 @@ namespace lan.Operations
             return prevScan.Except(lastScan, new HostComparison()).ToList();
         }
 
-        public override void Disable()
+        public void Disable()
         {
-            if (!Active)
+            if (!_active)
             {
-                RaiseFeedback("The network is not being monitored.");
+                RaiseFeedback("ℹ️ The network is not being monitored.");
                 return;
             }
 
-            if (!scanner.HasExited)
-                scanner.Kill();
+            _cancel = true;
 
-            if (worker.IsBusy)
-                worker.CancelAsync();
+            if (scanner != null && !scanner.HasExited)
+            {
+                try
+                {
+                    scanner.Kill();
+                }
+                catch { }
+            }
 
-            Active = false;
+            // Wait for threads to finish
+            worker?.Join(5000);
+            _cancelthr?.Join(5000);
+
+            _active = false;
+            RaiseFeedback("🛑 Network monitoring disabled.");
         }
 
         public override void Execute()
         {
-            if (this._cancel)
+            if (_active)
             {
-                this._updateAvailable("The network is already being monitored.");
+                RaiseFeedback("ℹ️ The network is already being monitored.");
                 return;
             }
 
-            this.worker.Start();
-            this._cancelthr.Start();
+            _active = true;
+            _cancel = false;
+
+            worker = new Thread(WorkerProc) { IsBackground = true };
+            _cancelthr = new Thread(CancelProc) { IsBackground = true };
+
+            worker.Start();
+            _cancelthr.Start();
         }
     }
 }

@@ -40,13 +40,15 @@ namespace capapp.Helpers
         {
             var flag = this.isWindowMinized(hWnd);
 
-            if (flag) {
+            if (flag)
+            {
                 User32Helper.ShowWindow(hWnd, User32Helper.SW_RESTORE);
 
                 // let the window appear..
                 Thread.Sleep(250);
             }
-            else {
+            else
+            {
                 User32Helper.SetForegroundWindow(hWnd);
             }
 

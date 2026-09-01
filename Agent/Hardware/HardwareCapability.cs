@@ -4,9 +4,9 @@ using Sdk.Contracts;
 using Sdk.Devices;
 using static Hardware.Sdk.CpuIdSdk64;
 
-namespace Agent.Helpers
+namespace Agent.Hardware
 {
-    public class CpuidHelper : ICpuidHelper
+    public class HardwareCapability : IHardwareCapability
     {
         private readonly int deviceCount;
 
@@ -15,7 +15,7 @@ namespace Agent.Helpers
 
         private const uint CLASS_DEVICE_ALL = 0;
 
-        public CpuidHelper()
+        public HardwareCapability()
         {
             this.deviceCount = Cpuid64.Instance.Sdk64.GetNumberOfDevices();
 

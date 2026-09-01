@@ -6,7 +6,7 @@ namespace Sdk.Contracts
     public interface IPlugin
     {
         // todo - remove? maybe we dont need to pass services from Agent to plugins
-        void Initialize(IServiceLocator services);
+        void Initialize(IServiceResolver services);
 
         void SetExecuteResultCallback(Action<ExecuteResult> callback);
 

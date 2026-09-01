@@ -3,14 +3,14 @@ using crontemp.Enums;
 using crontemp.Jobs;
 using crontemp.Models;
 using FluentScheduler;
-using Sdk.Plugins;
 using Sdk.Contracts;
 using Sdk.Dependencies;
 using Sdk.Devices;
 using Sdk.Models;
+using Sdk.Plugins;
+using System.Reflection;
 using System.Resources;
 using System.Text;
-using System.Reflection;
 
 namespace crontemp
 {
@@ -26,7 +26,7 @@ namespace crontemp
             )
         {
             this._rm = new ResourceManager(
-                "crontemp.Resource1", 
+                "crontemp.Resource1",
                 Assembly.GetExecutingAssembly()
             );
         }
@@ -139,9 +139,9 @@ namespace crontemp
             }
         }
 
-        public override void Initialize(IServiceLocator service)
+        public override void Initialize(IServiceResolver service)
         {
-            var CpuidHelper = service.ResolveInstance<ICpuidHelper>();
+            var CpuidHelper = service.ResolveInstance<IHardwareCapability>();
 
             // fill class field with devices
             this._devices = CpuidHelper

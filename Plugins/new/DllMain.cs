@@ -1,10 +1,8 @@
 ﻿using CommandLine;
 using FluentScheduler;
 using New.Jobs;
-using Sdk.Plugins;
-using Sdk.Dependencies;
 using Sdk.Models;
-using Sdk.Telegram;
+using Sdk.Plugins;
 
 namespace New
 {

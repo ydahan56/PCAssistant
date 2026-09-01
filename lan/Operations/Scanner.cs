@@ -1,35 +1,77 @@
-﻿using lan.Types;
+using lan.Types;
 using System.Diagnostics;
 
 namespace lan.Operations
 {
     public class Scanner : OperationBase
     {
-        private readonly ProcessStartInfo si;
         private readonly Action<string> _updateAvailable;
 
-        public Scanner(Action<string> updateAvailable)
+        public Scanner(Action<string> updateAvailable) : base()
         {
-            this._updateAvailable = updateAvailable;
+            _updateAvailable = updateAvailable ?? throw new ArgumentNullException(nameof(updateAvailable));
         }
 
-        public override void Discover()
+        protected override void RaiseFeedback(string message)
         {
-            var programuri = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wnet.exe");
-            var startinfo = new ProcessStartInfo(programuri, $"/sxml {AppDomain.CurrentDomain.BaseDirectory}");
+            _updateAvailable?.Invoke(message);
+        }
 
+        public override void Execute()
+        {
             if (!File.Exists(programuri))
             {
-                this._updateAvailable($"{programuri} does not exist.");
+                RaiseFeedback($"❌ Network scanner not found: {programuri}");
                 return;
-            };
+            }
 
-            var wnet = Process.Start(si);
+            try
+            {
+                RaiseFeedback("🔍 Scanning local network...");
 
-            // we wait maximum 2 minutes
-            wnet.WaitForExit(TimeSpan.FromMinutes(2));
+                // Configure process to run wnet.exe
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = programuri,
+                    Arguments = $"/sxml \"{scanPath}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
 
-            RaiseDiscovered(ReadHosts(scanPath));
+                using var process = Process.Start(startInfo);
+
+                if (process == null)
+                {
+                    RaiseFeedback("❌ Failed to start network scanner process.");
+                    return;
+                }
+
+                // Wait maximum 2 minutes for the scan to complete
+                var timeout = TimeSpan.FromMinutes(2);
+                if (!process.WaitForExit((int)timeout.TotalMilliseconds))
+                {
+                    RaiseFeedback("⏱️ Scan timed out after 2 minutes.");
+                    process.Kill();
+                    return;
+                }
+
+                // Check if scan file was created
+                if (!File.Exists(scanPath))
+                {
+                    RaiseFeedback("❌ Scan completed but no results file was created.");
+                    return;
+                }
+
+                // Read and display discovered hosts
+                var hosts = ReadHosts(scanPath);
+                RaiseDiscovered(hosts);
+            }
+            catch (Exception ex)
+            {
+                RaiseFeedback($"❌ Scan failed: {ex.Message}");
+            }
         }
     }
 }

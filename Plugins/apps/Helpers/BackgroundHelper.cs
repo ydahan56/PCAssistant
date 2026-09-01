@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace apps.Helpers
 {
@@ -22,7 +18,7 @@ namespace apps.Helpers
                     var versionInfo = item.MainModule?.FileVersionInfo;
                     sb.AppendLine($"- {versionInfo?.FileDescription} ({item.Id})");
                 }
-                catch 
+                catch
                 {
                     // ignore
                 }

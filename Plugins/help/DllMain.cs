@@ -1,11 +1,10 @@
 ﻿using CommandLine;
-using Sdk.Plugins;
 using Sdk.Contracts;
 using Sdk.Dependencies;
 using Sdk.Models;
-using Sdk.Telegram;
-using System.Text;
+using Sdk.Plugins;
 using System.Reflection;
+using System.Text;
 
 namespace help
 {
@@ -24,9 +23,9 @@ namespace help
             );
         }
 
-        public override void Initialize(IServiceLocator service)
+        public override void Initialize(IServiceResolver service)
         {
-            var modules = service.ResolveInstances<IPlugin>();
+            var modules = service.ResolveCollection<IPlugin>();
 
             this.sb = new StringBuilder();
 

@@ -1,12 +1,6 @@
 ﻿using CommandLine;
 using FluentScheduler;
-using Microsoft.Windows.Themes;
 using Sdk.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Sdk.Plugins
 {
@@ -29,7 +23,7 @@ namespace Sdk.Plugins
         protected readonly string _nameOfJob;
 
         protected CronPlugin(
-            string nameofClass, 
+            string nameofClass,
             string nameofJob
             )
         {

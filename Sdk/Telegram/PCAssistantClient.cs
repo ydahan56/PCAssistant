@@ -1,6 +1,5 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Polling;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace Sdk.Telegram
@@ -8,7 +7,7 @@ namespace Sdk.Telegram
     public class PCAssistantClient : TelegramBotClient, IPCAssistant
     {
         private readonly CancellationTokenSource _cancel;
-     
+
         public PCAssistantClient(string token) : base(token)
         {
             this._cancel = new CancellationTokenSource();

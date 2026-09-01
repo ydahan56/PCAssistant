@@ -23,7 +23,7 @@ namespace Sdk.Plugins
 
         public abstract void Execute();
 
-        public virtual void Initialize(IServiceLocator services)
+        public virtual void Initialize(IServiceResolver services)
         {
             // throw new NotImplementedException();
         }

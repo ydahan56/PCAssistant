@@ -27,7 +27,7 @@ namespace apps.Helpers
             var windowStyle = User32Helper.GetWindowLong(hWnd, (int)User32Helper.GWL.GWL_STYLE);
             var windowStyle64 = windowStyle.ToInt64();
 
-            return isBitSet(windowStyle64, User32Helper.WS_CAPTION) && 
+            return isBitSet(windowStyle64, User32Helper.WS_CAPTION) &&
                    isBitSet(windowStyle64, User32Helper.WS_VISIBLE);
         }
 
@@ -47,7 +47,7 @@ namespace apps.Helpers
 
                 string itemName = string.
                     IsNullOrWhiteSpace(versionInfo.FileDescription) ?
-                    versionInfo.ProductName : 
+                    versionInfo.ProductName :
                     versionInfo.FileDescription;
 
                 this._sb.AppendLine($"- {itemName} ({id})");

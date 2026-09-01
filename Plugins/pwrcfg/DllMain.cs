@@ -2,10 +2,8 @@
 using FluentScheduler;
 using pwrcfg.Commands;
 using pwrcfg.Jobs;
-using Sdk.Plugins;
-using Sdk.Dependencies;
 using Sdk.Models;
-using Sdk.Telegram;
+using Sdk.Plugins;
 
 namespace pwrcfg
 {

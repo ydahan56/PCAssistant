@@ -1,8 +1,6 @@
 ﻿using CommandLine;
-using Sdk.Plugins;
-using Sdk.Dependencies;
 using Sdk.Models;
-using Sdk.Telegram;
+using Sdk.Plugins;
 using System.Drawing.Imaging;
 
 namespace prtsc

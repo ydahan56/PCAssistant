@@ -1,7 +1,6 @@
-﻿using FluentScheduler;
-using Sdk.Devices;
-using croncap.Enums;
+﻿using croncap.Enums;
 using croncap.Models;
+using FluentScheduler;
 using System.Drawing;
 
 namespace croncap.Jobs
@@ -21,7 +20,7 @@ namespace croncap.Jobs
             this.update = update;
             this.elapsedDateTime = DateTime.Now.AddSeconds(total);
             this.screenUtilities = new ScreenUtilities();
-            
+
             this.Schedule(this).NonReentrant()
                 .WithName(this.GetType().Name)
                 .ToRunNow().AndEvery(timeout).Seconds();

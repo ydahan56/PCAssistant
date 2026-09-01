@@ -1,25 +1,26 @@
-using Agent.Helpers;
+using Agent.Hardware;
+using Agent.Notification;
+using Agent.Startup;
 using DotNetEnv;
+using Easy.MessageHub;
 using FluentScheduler;
 using Hardware;
 using Sdk;
-using Sdk.Containers;
 using Sdk.Contracts;
-using Sdk.Dependencies;
-using Sdk.Hub;
 using Sdk.Telegram;
 using SimpleInjector;
 using System.Reflection;
-using Telegram.Bot.Types;
+using Telegram.Bot.Polling;
 
 namespace Agent
 {
-    internal static class Program
+    public static class Program
     {
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         public static extern bool SetProcessDPIAware();
 
-        public static IServiceLocator Services { get; private set; }
+        public static Container IOC = new Container();
+
 
         [STAThread]
         static void Main()
@@ -29,59 +30,30 @@ namespace Agent
             // to capture the entire screen on high DPI computers
             SetProcessDPIAware();
 
-            EventAggregator.Instance.MessageHub
-                .Subscribe<ApplicationEvent>(OnApplicationEvent);
-
-            Services = new DependencyLocator(new Container());
-
-            var token = Env.GetString("token");
-
-            // init cpuidsdk
             Cpuid64.Instance.InitSDK(PCManager.GetAppDirectory());
 
-            // init telegram
-            var telegram = new PCAssistantClient(token);
-
-            // init cpuid helper
-            var cpuidHelper = new CpuidHelper();
-
-            // read plugins
-            var plugins = EnumeratePlugins();
-
-            // register components
-            RegisterComponents(cpuidHelper, plugins);
-
-            // initialize plugins (02/10/2024 moved to parser)
-            // InitializePlugins(plugins);
-
-            // start application's message loop
-            Application.Run(new Main(telegram));
-
-            // cleanup
-            telegram.Cancel();
-            JobManager.Stop();
-            Cpuid64.Instance.Dispose();
-        }
-
-        static void OnApplicationEvent(ApplicationEvent eventType)
-        {
-            switch (eventType)
+            IOC.RegisterSingleton<Main>();
+            IOC.RegisterSingleton<IBootstrapper, Bootstrapper>();
+            IOC.RegisterSingleton<IMessageHub, MessageHub>();
+            IOC.RegisterSingleton<IUpdateHandler, AgentUpdateHandler>();
+            IOC.RegisterSingleton<INotificationHandler, NotificationHandler>();
+            IOC.RegisterSingleton<IPCAssistant>(() =>
             {
-                case ApplicationEvent.Exit:
-                    Application.Exit();
-                    break;
-                case ApplicationEvent.Restart:
-                    Application.Restart();
-                    break;
-            }
-        }
+                var token = Env.GetString("token");
+                return new PCAssistantClient(token);
+            });
+            IOC.RegisterSingleton<IHardwareCapability>(() => new HardwareCapability());
 
-        static void RegisterComponents(ICpuidHelper cpuid, List<IPlugin> items)
-        {
-            Services.RegisterInstance(cpuid);
-            Services.RegisterInstances(items);
+            var modules = EnumeratePlugins();
+            IOC.Collection.Register<IPlugin>(modules);
 
+            var mainContext = IOC.GetInstance<Main>();
             //IOC.Verify();
+
+            Application.Run(mainContext);
+
+            JobManager.StopAndBlock();
+            Cpuid64.Instance.Dispose();
         }
 
         static List<IPlugin?> EnumeratePlugins()

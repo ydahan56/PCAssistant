@@ -1,6 +1,6 @@
 ﻿using CommandLine;
-using Sdk.Plugins;
 using Sdk.Models;
+using Sdk.Plugins;
 using static display.Helpers.User32Helper;
 
 namespace display

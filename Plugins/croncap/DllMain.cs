@@ -1,13 +1,13 @@
 ﻿using CommandLine;
+using croncap.Enums;
 using croncap.Jobs;
 using croncap.Models;
-using croncap.Enums;
 using FluentScheduler;
-using Sdk.Plugins;
 using Sdk.Models;
+using Sdk.Plugins;
+using System.Reflection;
 using System.Resources;
 using System.Text;
-using System.Reflection;
 
 namespace croncap
 {
@@ -22,7 +22,7 @@ namespace croncap
             )
         {
             this._rm = new ResourceManager(
-                "croncap.Resource1", 
+                "croncap.Resource1",
                 Assembly.GetExecutingAssembly()
             );
         }

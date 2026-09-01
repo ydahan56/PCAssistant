@@ -1,10 +1,10 @@
 ﻿using AutoUpdaterDotNET;
 using CommandLine;
-using Sdk.Plugins;
 using Sdk.Hub;
 using Sdk.Models;
-using System.Resources;
+using Sdk.Plugins;
 using System.Reflection;
+using System.Resources;
 
 namespace update
 {
@@ -17,7 +17,7 @@ namespace update
         public bool Download { get; set; }
 
         [Option("check", Required = false, HelpText = "Check for an update")]
-        public bool Check {  get; set; }
+        public bool Check { get; set; }
 
         public DllMain()
         {

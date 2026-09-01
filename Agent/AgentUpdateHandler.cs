@@ -1,15 +1,16 @@
-﻿using CommandLine;
-using DotNetEnv;
+﻿using Agent.Notification;
+using CommandLine;
 using FluentScheduler;
+using Nito.AsyncEx;
 using Sdk;
-using Sdk.Plugins;
 using Sdk.Contracts;
+using Sdk.Dependencies;
 using Sdk.Models;
+using Sdk.Plugins;
 using Sdk.Telegram;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
-using Nito.AsyncEx;
 using Telegram.Bot.Types.Enums;
 
 namespace Agent
@@ -18,13 +19,13 @@ namespace Agent
     {
         private Update _update;
 
-        private readonly NotifyIcon _tray;
+        private readonly INotificationHandler _tray;
         private readonly IPCAssistant _assistant;
 
         private readonly List<long> _whitelist;
         private readonly Type[] _commands;
 
-        public AgentUpdateHandler(NotifyIcon tray, IPCAssistant assistant)
+        public AgentUpdateHandler(INotificationHandler tray, IPCAssistant assistant)
         {
             this._tray = tray;
             this._assistant = assistant;
@@ -42,18 +43,10 @@ namespace Agent
             //    })
             //    .ToList();
 
-            this._commands = Program.Services
-                .ResolveInstances<IPlugin>()
+            this._commands = Program.IOC
+                .GetAllInstances<IPlugin>()
                 .Select(x => x.GetType())
                 .ToArray();
-        }
-
-        public async Task HandlePollingErrorAsync(ITelegramBotClient client, Exception exception, CancellationToken cancellationToken)
-        {
-            await System.IO.File.AppendAllTextAsync(
-                PCManager.Combine("log.txt"),
-                exception.ToString() + Environment.NewLine
-            );
         }
 
         public async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken cancellationToken)
@@ -69,10 +62,13 @@ namespace Agent
 
             if (string.IsNullOrWhiteSpace(update.Message.Text))
             {
-                await client.SendTextMessageAsync(
-                    update.Message.Chat.Id,
+                await this._assistant.SendMessage(
+                    new ChatId(update.Message.Chat.Id),
                     "Unrecognized command.",
-                    replyToMessageId: update.Message.MessageId
+                    replyParameters: new ReplyParameters()
+                    {
+                        MessageId = update.Message.MessageId
+                    }
                 );
 
                 return;
@@ -80,15 +76,15 @@ namespace Agent
 
 
             dynamic from = String.IsNullOrWhiteSpace(
-                update.Message.From.Username) ? 
-                update.Message.From.Id : 
+                update.Message.From.Username) ?
+                update.Message.From.Id :
                 update.Message.From.Username
             ;
 
-            var tipText = $"Received {update.Message.Text} from {from}.";
+            var text = $"Received {update.Message.Text} from {from}.";
 
             // show balloon tip to the user
-            this._tray.ShowBalloonTip(1750, this._tray.Text, tipText, ToolTipIcon.Info);
+            this._tray.ShowMessage(text);
 
             // read args from user
             var args = update.Message.Text.SplitArgs();
@@ -97,7 +93,7 @@ namespace Agent
                 .WithParsed<Plugin>((o) =>
                 {
                     // initliaze plugin
-                    o.Initialize(Program.Services);
+                    o.Initialize(new ServiceResolver(Program.IOC));
 
                     // set callback for the command
                     o.SetExecuteResultCallback(this.ExecuteResultCallback);
@@ -119,12 +115,12 @@ namespace Agent
             if (result.ResultType == ExecuteResultType.Text)
             {
                 // show balloon tip to the user
-                this._tray.ShowBalloonTip(1750, this._tray.Text, result.StatusText, ToolTipIcon.Info);
+                this._tray.ShowMessage(result.StatusText);
 
                 // send result to the user
                 AsyncContext.Run(async () =>
                 {
-                    await this._assistant.SendTextMessageAsync(
+                    await this._assistant.SendMessage(
                         this._update.Message.Chat.Id,
                         result.StatusText,
                         parseMode: ParseMode.Markdown
@@ -138,7 +134,7 @@ namespace Agent
                     var document = (result as ExecuteDocumentResult);
 
                     // perform send
-                    await this._assistant.SendDocumentAsync(
+                    await this._assistant.SendDocument(
                         this._update.Message.Chat.Id,
                         InputFile.FromStream(
                             document.Stream, document.FileName
@@ -153,7 +149,7 @@ namespace Agent
                     var image = (result as ExecuteImageResult);
 
                     // perform send
-                    await this._assistant.SendPhotoAsync(
+                    await this._assistant.SendPhoto(
                         this._update.Message.Chat.Id,
                         InputFile.FromStream(
                             image.Stream, image.FileName
@@ -161,6 +157,12 @@ namespace Agent
                     );
                 });
             }
+        }
+
+        public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
+        {
+            string path = PCManager.Combine("log.txt");
+            await System.IO.File.AppendAllTextAsync(path, exception.ToString() + Environment.NewLine);
         }
     }
 }

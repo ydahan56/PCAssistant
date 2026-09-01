@@ -2,7 +2,7 @@
 
 namespace Sdk.Contracts
 {
-    public interface ICpuidHelper
+    public interface IHardwareCapability
     {
         IEnumerable<IDevice> GetAll();
         IEnumerable<IDevice> GetSelected(uint[] _device_classes);
