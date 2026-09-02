@@ -56,45 +56,50 @@ namespace Sdk.Models
                 await client.SendMessage(this.ChatId, part, replyParameters: this.ReplyParameters);
                 this.ErrorMessage = this.ErrorMessage.Substring(4096);
             }
-        }
-    }
 
-    public class DocumenContext : StreamContext
-    {
-        public override async Task SendPackage(IPCAssistant client)
-        {
-            try
+            if (this.ErrorMessage.Length > 0)
             {
-                if (Stream.CanSeek)
-                    Stream.Position = 0;
-
-                await client.SendDocument(this.ChatId, InputFile.FromStream(Stream, FileName));
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine(ex.ToString());
-                Console.WriteLine($"Inner: {ex.InnerException}");
-                //throw;
+                await client.SendMessage(this.ChatId, this.ErrorMessage, replyParameters: this.ReplyParameters);
             }
         }
-    }
 
-    public class ImageContext : StreamContext
-    {
-        public override async Task SendPackage(IPCAssistant client)
+        public class DocumenContext : StreamContext
         {
-            try
+            public override async Task SendPackage(IPCAssistant client)
             {
-                if (Stream.CanSeek)
-                    Stream.Position = 0;
+                try
+                {
+                    if (Stream.CanSeek)
+                        Stream.Position = 0;
 
-                await client.SendPhoto(this.ChatId, InputFile.FromStream(Stream, FileName));
+                    await client.SendDocument(this.ChatId, InputFile.FromStream(Stream, FileName));
+                }
+                catch (HttpRequestException ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                    Console.WriteLine($"Inner: {ex.InnerException}");
+                    //throw;
+                }
             }
-            catch (HttpRequestException ex)
+        }
+
+        public class ImageContext : StreamContext
+        {
+            public override async Task SendPackage(IPCAssistant client)
             {
-                Console.WriteLine(ex.ToString());
-                Console.WriteLine($"Inner: {ex.InnerException}");
-                //throw;
+                try
+                {
+                    if (Stream.CanSeek)
+                        Stream.Position = 0;
+
+                    await client.SendPhoto(this.ChatId, InputFile.FromStream(Stream, FileName));
+                }
+                catch (HttpRequestException ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                    Console.WriteLine($"Inner: {ex.InnerException}");
+                    //throw;
+                }
             }
         }
     }

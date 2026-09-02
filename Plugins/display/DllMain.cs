@@ -1,11 +1,12 @@
-﻿using CommandLine;
+﻿using System;
+using System.Collections.Generic;
+using CommandLine;
 using Sdk.Models;
 using Sdk.Plugins;
-using static display.Helpers.User32Helper;
 
 namespace display
 {
-    [Verb("/display", HelpText = "Control the state of the display adapter")]
+    [Verb("/display", HelpText = "Control the physical state of the display hardware via DDC/CI")]
     public class DllMain : Plugin
     {
         [Option("enabled", Required = true, HelpText = "Turn the display on or off (true|false)")]
@@ -13,18 +14,15 @@ namespace display
 
         public override void Execute()
         {
-
-            var statusCode = PostMessage(
-                HWND_BROADCAST,
-                WM_SYSCOMMAND,
-                SC_MONITORPOWER,
-                Convert.ToBoolean(this.Enabled) ? -1 : 2
-            );
+            bool turnOn = Convert.ToBoolean(this.Enabled);
+            bool success = MonitorPowerController.SetPowerState(turnOn);
 
             this.ExecuteContextCallback(new TextContext()
             {
-                ErrorMessage = $"PostMessage returned with status code {statusCode}",
-                IsErrorSuccess = true,
+                ErrorMessage = success
+                    ? $"Successfully sent DDC/CI hardware power command: {(turnOn ? "ON" : "OFF")}"
+                    : "Failed to send DDC/CI commands. Ensure monitors support DDC/CI and are connected via HDMI/DP.",
+                IsErrorSuccess = success,
                 ChatId = this.Parameters.ChatId,
                 ReplyParameters = this.Parameters.ReplyParameters
             });
