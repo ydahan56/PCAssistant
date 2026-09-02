@@ -104,7 +104,7 @@ namespace capapp
                 var stream = new MemoryStream(jpeg, writable: false);
                 var fileName = $"capture_{ProcessId}_{DateTime.UtcNow.Ticks}.jpg";
 
-                this.ExecuteContextCallback(new ImageContext())
+                this.ExecuteContextCallback(new ImageContext()
                 {
                     IsErrorSuccess = true,
                     Stream = stream,

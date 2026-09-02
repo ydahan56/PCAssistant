@@ -62,44 +62,44 @@ namespace Sdk.Models
                 await client.SendMessage(this.ChatId, this.ErrorMessage, replyParameters: this.ReplyParameters);
             }
         }
+    }
 
-        public class DocumenContext : StreamContext
+    public class DocumenContext : StreamContext
+    {
+        public override async Task SendPackage(IPCAssistant client)
         {
-            public override async Task SendPackage(IPCAssistant client)
+            try
             {
-                try
-                {
-                    if (Stream.CanSeek)
-                        Stream.Position = 0;
+                if (Stream.CanSeek)
+                    Stream.Position = 0;
 
-                    await client.SendDocument(this.ChatId, InputFile.FromStream(Stream, FileName));
-                }
-                catch (HttpRequestException ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                    Console.WriteLine($"Inner: {ex.InnerException}");
-                    //throw;
-                }
+                await client.SendDocument(this.ChatId, InputFile.FromStream(Stream, FileName));
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine(ex.ToString());
+                Console.WriteLine($"Inner: {ex.InnerException}");
+                //throw;
             }
         }
+    }
 
-        public class ImageContext : StreamContext
+    public class ImageContext : StreamContext
+    {
+        public override async Task SendPackage(IPCAssistant client)
         {
-            public override async Task SendPackage(IPCAssistant client)
+            try
             {
-                try
-                {
-                    if (Stream.CanSeek)
-                        Stream.Position = 0;
+                if (Stream.CanSeek)
+                    Stream.Position = 0;
 
-                    await client.SendPhoto(this.ChatId, InputFile.FromStream(Stream, FileName));
-                }
-                catch (HttpRequestException ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                    Console.WriteLine($"Inner: {ex.InnerException}");
-                    //throw;
-                }
+                await client.SendPhoto(this.ChatId, InputFile.FromStream(Stream, FileName));
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine(ex.ToString());
+                Console.WriteLine($"Inner: {ex.InnerException}");
+                //throw;
             }
         }
     }
