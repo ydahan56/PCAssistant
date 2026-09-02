@@ -24,34 +24,26 @@ namespace Agent
         private readonly INotificationHandler _tray;
         private readonly ISimpleMessageQueue<ExecuteContext> _queue;
 
-        private readonly List<ChatId> _whitelist; // todo - restore
+        private readonly HashSet<ChatId> _whitelist;
         private readonly Type[] _commands;
 
         public AgentUpdateHandler(
-            IPCAssistant client, INotificationHandler tray, ISimpleMessageQueue<ExecuteContext> queue)
+            IPCAssistant client, IEnumerable<IPlugin> plugins, INotificationHandler tray, ISimpleMessageQueue<ExecuteContext> queue)
         {
             this._tray = tray;
             this._client = client;
             this._queue = queue;
 
-            this._whitelist = Env.GetString("whitelist")
-                .Split(",")
-                .Select(id =>
-                {
-                    if (string.IsNullOrWhiteSpace(id))
-                        return new ChatId(0);
+            this._whitelist = new HashSet<ChatId>();
+            foreach (var chatid in Env.GetString("whitelist").Split(","))
+            {
+                if (String.IsNullOrWhiteSpace(chatid))
+                    continue;
 
-                    var parsed = Convert.ToInt64(id);
-                    var chat = new ChatId(id);
+                this._whitelist.Add(new ChatId(Convert.ToInt64(chatid)));
+            }
 
-                    return chat;
-                })
-                .ToList();
-
-            this._commands = Program.IOC
-                .GetAllInstances<IPlugin>()
-                .Select(x => x.GetType())
-                .ToArray();
+            this._commands = plugins.Select(x => x.GetType()).ToArray();
         }
 
         public async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken cancellationToken)

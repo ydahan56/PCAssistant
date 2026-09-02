@@ -16,15 +16,26 @@ namespace Agent.Startup
         private readonly IPCAssistant _client;
         private readonly INotificationHandler _tray;
 
+        private event Func<Task> ClientHelloEvent;
+
         public Bootstrapper(IPCAssistant client, IMessageHub hub, INotificationHandler tray)
         {
             this._client = client;
             this._tray = tray;
 
             this.Schedule(this.UpdateTrayCaption).ToRunOnceIn(2).Seconds();
-            this.Schedule(this.NotifyClientHello).ToRunOnceIn(5).Seconds();
+            this.Schedule(this.SendClientHello).ToRunOnceIn(5).Seconds();
 
             hub.Subscribe<ApplicationEvent>(this.ApplicationEventHandler);
+
+            foreach (var chatid in Env.GetString("whitelist").Split(","))
+            {
+                if (String.IsNullOrWhiteSpace(chatid))
+                    continue;
+
+                var whiteid = new WhiteClient(this._client, this._tray, Convert.ToInt64(chatid));
+                this.ClientHelloEvent += whiteid.SendClientHello;
+            }
         }
 
         public Registry GeInstance()
@@ -54,32 +65,33 @@ namespace Agent.Startup
             this._tray.SetTitle(user.Username);
         }
 
-        private void NotifyClientHello()
+        private void SendClientHello()
         {
-            var whitelist = Env.GetString("whitelist")
-                .Split(",")
-                .Select(id =>
-                {
-                    if (string.IsNullOrWhiteSpace(id))
-                        return new ChatId(0);
+            this.ClientHelloEvent();
+        }
+    }
 
-                    var parsed = Convert.ToInt64(id);
-                    var chat = new ChatId(id);
+    public interface IWhiteClient
+    {
+        Task SendClientHello();
+    }
 
-                    return chat;
-                })
-                .ToList();
+    public class WhiteClient : IWhiteClient
+    {
+        private readonly long _chatId;
+        private readonly IPCAssistant _client;
+        private readonly INotificationHandler _tray;
 
-            foreach (ChatId chatId in whitelist) // todo - replace with an event
-            {
-                AsyncContext.Run(
-                    async () => await this._client.SendMessage(
-                        chatId,
-                        $"*{this._tray.GetTitle()}*: I'm Up.",
-                        parseMode: ParseMode.Markdown
-                    )
-                );
-            }
+        public WhiteClient(IPCAssistant client, INotificationHandler tray, long chatid)
+        {
+            this._client = client;
+            this._tray = tray;
+            this._chatId = chatid;
+        }
+        public async Task SendClientHello()
+        {
+            await this._client.SendMessage(
+                this._chatId, $"*{this._tray.GetTitle()}*: I'm Up.", parseMode: ParseMode.Markdown);
         }
     }
 }

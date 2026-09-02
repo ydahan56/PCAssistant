@@ -35,7 +35,7 @@ namespace msinfo32
             // obtain handle to file
             var fs = new FileStream(filePath, FileMode.Open);
 
-            var context = new StreamContext()
+            var context = new DocumenContext()
             {
                 FileName = Path.GetFileName(filePath),
                 Stream = fs,

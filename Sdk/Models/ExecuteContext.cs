@@ -1,9 +1,18 @@
-﻿using Telegram.Bot.Types;
+﻿using Sdk.Telegram;
+using System.Reflection.Metadata;
+using System.Windows.Forms;
+using Telegram.Bot;
+using Telegram.Bot.Types;
 
 namespace Sdk.Models
 {
 
-    public class ExecuteContext
+    public interface IExecuteContext
+    {
+        Task SendPackage(IPCAssistant client);
+    }
+
+    public abstract class ExecuteContext : IExecuteContext
     {
         public bool IsErrorSuccess { get; set; }
         public string ErrorMessage { get; set; }
@@ -12,10 +21,7 @@ namespace Sdk.Models
 
         public ExecuteResultType ResultType { get; set; }
 
-        public ExecuteContext()
-        {
-            this.ResultType = ExecuteResultType.Unknown;
-        }
+        public abstract Task SendPackage(IPCAssistant client);
     }
 
     public class StreamContext : ExecuteContext
@@ -23,25 +29,57 @@ namespace Sdk.Models
         public string FileName { get; set; }
         public Stream Stream { get; set; }
 
-        public StreamContext()
+        public override Task SendPackage(IPCAssistant client)
         {
-            this.ResultType = ExecuteResultType.Stream;
+            throw new NotImplementedException("SendPackage must be implemented in derived classes.");
+        }
+    }
+
+    public class TextContext : ExecuteContext
+    {
+        public override async Task SendPackage(IPCAssistant client)
+        {
+            await client.SendMessage(this.ChatId, this.ErrorMessage, replyParameters: this.ReplyParameters);
         }
     }
 
     public class DocumenContext : StreamContext
     {
-        public DocumenContext()
+        public override async Task SendPackage(IPCAssistant client)
         {
-            this.ResultType = ExecuteResultType.Document;
+            try
+            {
+                if (Stream.CanSeek)
+                    Stream.Position = 0;
+
+                await client.SendDocument(this.ChatId, InputFile.FromStream(Stream, FileName));
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine(ex.ToString());
+                Console.WriteLine($"Inner: {ex.InnerException}");
+                //throw;
+            }
         }
     }
 
     public class ImageContext : StreamContext
     {
-        public ImageContext()
+        public override async Task SendPackage(IPCAssistant client)
         {
-            this.ResultType = ExecuteResultType.Image;
+            try
+            {
+                if (Stream.CanSeek)
+                    Stream.Position = 0;
+
+                await client.SendPhoto(this.ChatId, InputFile.FromStream(Stream, FileName));
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine(ex.ToString());
+                Console.WriteLine($"Inner: {ex.InnerException}");
+                //throw;
+            }
         }
     }
 }

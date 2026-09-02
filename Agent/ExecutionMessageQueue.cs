@@ -21,24 +21,7 @@ namespace Agent
 
         protected override async void HandleMessage(ExecuteContext message)
         {
-            if (message.ResultType == ExecuteResultType.Text)
-            {
-                this._tray.ShowMessage(message.ErrorMessage);
-                await this._client.SendMessage(
-                    message.ChatId, message.ErrorMessage, parseMode: ParseMode.Markdown);
-            }
-            else if (message.ResultType == ExecuteResultType.Document)
-            {
-                var document = message as DocumenContext;
-                await this._client.SendDocument(
-                    message.ChatId, InputFile.FromStream(document.Stream, document.FileName));
-            }
-            else if (message.ResultType == ExecuteResultType.Image)
-            {
-                var image = message as ImageContext;
-                await this._client.SendPhoto(
-                    message.ChatId, InputFile.FromStream(image.Stream, image.FileName));
-            }
+            await message.SendPackage(_client);
         }
     }
 }
