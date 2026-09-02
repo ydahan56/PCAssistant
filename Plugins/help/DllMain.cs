@@ -15,10 +15,13 @@ namespace help
 
         public override void Execute()
         {
-            this.ExecuteContext.ErrorMessage = builder.ToString().TrimEnd();
-            this.ExecuteContext.IsErrorSuccess = true;
-            this.ExecuteContext.ResultType = ExecuteResultType.Text;
-            this.ExecuteContextCallback(this.ExecuteContext);
+            this.ExecuteContextCallback(new TextContext()
+            {
+                ErrorMessage = builder.ToString().TrimEnd(),
+                IsErrorSuccess = true,
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
+            });
         }
 
         public override IPlugin Initialize(IServiceResolver service)

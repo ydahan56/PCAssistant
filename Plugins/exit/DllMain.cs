@@ -14,10 +14,13 @@ namespace exit
         private IMessageHub _hub;
         public override void Execute()
         {
-            this.ExecuteContext.IsErrorSuccess = true;
-            this.ExecuteContext.ErrorMessage = "PCAssistant is about to shutdown..";
-            this.ExecuteContext.ResultType = ExecuteResultType.Text;
-            this.ExecuteContextCallback(this.ExecuteContext);
+            this.ExecuteContextCallback(new TextContext()
+            {
+                IsErrorSuccess = true,
+                ErrorMessage = "PCAssistant is about to shutdown..",
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
+            });
 
             Task.Delay(2500).ContinueWith(async (s) =>
             {

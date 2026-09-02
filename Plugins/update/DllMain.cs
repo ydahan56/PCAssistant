@@ -46,13 +46,13 @@ namespace update
             {
                 if (_isDownloadEnabled)
                 {
-                    this.ExecuteContextCallback(
-                        new ExecuteContext()
-                        {
-                            ErrorMessage = "PCAssistant is updating...",
-                            IsErrorSuccess = true
-                        }
-                    );
+                    this.ExecuteContextCallback(new TextContext()
+                    {
+                        ErrorMessage = "PCAssistant is updating...",
+                        IsErrorSuccess = true,
+                        ChatId = this.Parameters.ChatId,
+                        ReplyParameters = this.Parameters.ReplyParameters
+                    });
 
                     var updateSuccess = AutoUpdater.DownloadUpdate(e);
 
@@ -66,37 +66,37 @@ namespace update
                     return;
                 }
 
-                this.ExecuteContextCallback(
-                    new ExecuteContext()
-                    {
-                        ErrorMessage = $"A new version {e.CurrentVersion} of PCAssistant is available!",
-                        IsErrorSuccess = true
-                    }
-                );
+                this.ExecuteContextCallback(new TextContext()
+                {
+                    ErrorMessage = $"A new version {e.CurrentVersion} of PCAssistant is available!",
+                    IsErrorSuccess = true,
+                    ChatId = this.Parameters.ChatId,
+                    ReplyParameters = this.Parameters.ReplyParameters
+                });
 
                 return;
             }
 
-            this.ExecuteContextCallback(
-                new ExecuteContext()
-                {
-                    ErrorMessage = "You're currently running the latest version of PCAssistant.",
-                    IsErrorSuccess = true
-                }
-            );
+            this.ExecuteContextCallback(new TextContext()
+            {
+                ErrorMessage = "You're currently running the latest version of PCAssistant.",
+                IsErrorSuccess = true,
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
+            });
         }
 
         public override void Execute()
         {
             if (this.Check)
             {
-                this.ExecuteContextCallback(
-                    new ExecuteContext()
-                    {
+                this.ExecuteContextCallback(new TextContext()
+                {
                         ErrorMessage = "Checking for updates...",
-                        IsErrorSuccess = true
-                    }
-                );
+                        IsErrorSuccess = true,
+                        ChatId = this.Parameters.ChatId,
+                        ReplyParameters = this.Parameters.ReplyParameters
+                });
 
                 // execute command
                 AutoUpdater.Start();

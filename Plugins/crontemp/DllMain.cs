@@ -48,9 +48,13 @@ namespace crontemp
             // check if an existing Job is already running
             if (this.IsCronJobActive)
             {
-                this.ExecuteContext.ErrorMessage = $"{this._nameOfClass} Job with id {this._cronJobId} is already running.";
-                this.ExecuteContext.IsErrorSuccess = true;
-                this.ExecuteContextCallback(this.ExecuteContext);
+                this.ExecuteContextCallback(new TextContext()
+                {
+                    ErrorMessage = $"{this._nameOfClass} Job with id {this._cronJobId} is already running.",
+                    IsErrorSuccess = true,
+                    ChatId = this.Parameters.ChatId,
+                    ReplyParameters = this.Parameters.ReplyParameters
+                });
                 return;
             }
 
@@ -69,14 +73,18 @@ namespace crontemp
             JobManager.Initialize(_cronJob);
 
             // update client
-            this.ExecuteContext.ErrorMessage = string.Format(
+          
+            this.ExecuteContextCallback(new TextContext()
+            {
+                ErrorMessage = string.Format(
                 this._rm.GetString("SUCCESS_ERRORMESSAGE"),
                 this._cronJobId,
                 this.Total,
-                this.Timeout
-            );
-            this.ExecuteContext.IsErrorSuccess = true;
-            this.ExecuteContextCallback(this.ExecuteContext);
+                this.Timeout),
+                IsErrorSuccess = true,
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
+            });
         }
 
         private StringBuilder updateMessageBuilder = new StringBuilder();
@@ -113,13 +121,13 @@ namespace crontemp
                 this.updateMessageBuilder.AppendLine("\nFrom *PCAssistant*");
 
                 // update client
-                this.ExecuteContextCallback(
-                    new ExecuteContext()
-                    {
-                        ErrorMessage = this.updateMessageBuilder.ToString(),
-                        IsErrorSuccess = true
-                    }
-                );
+                this.ExecuteContextCallback(new TextContext()
+                {
+                    ErrorMessage = this.updateMessageBuilder.ToString(),
+                    IsErrorSuccess = true,
+                    ChatId = this.Parameters.ChatId,
+                    ReplyParameters = this.Parameters.ReplyParameters
+                });
 
                 // clear previous instance
                 this.updateMessageBuilder = new StringBuilder();

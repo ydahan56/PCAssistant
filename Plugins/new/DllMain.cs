@@ -14,10 +14,11 @@ namespace New
         private IMessageHub _hub;
         public override void Execute()
         {
-            this.ExecuteContext.ErrorMessage = "PCAssistant is restarting...";
-            this.ExecuteContext.IsErrorSuccess = true;
-            this.ExecuteContext.ResultType = ExecuteResultType.Text;
-            this.ExecuteContextCallback(this.ExecuteContext);
+            this.ExecuteContextCallback(new TextContext()
+            {
+                ErrorMessage = "PCAssistant is restarting...",
+                IsErrorSuccess = true
+            });
 
             // we run the job in 5 seconds to allow
             // the bot client to observe the message

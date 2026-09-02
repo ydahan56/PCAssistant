@@ -29,23 +29,26 @@ namespace volume
         {
             if (!this._utility.Exists)
             {
-                this.ExecuteContext.IsErrorSuccess = false;
-                this.ExecuteContext.ErrorMessage = $"{this._utility.Name} does not exists";
-                this.ExecuteContext.ResultType = ExecuteResultType.Text;
-                this.ExecuteContextCallback(this.ExecuteContext);
+                this.ExecuteContextCallback(new TextContext()
+                {
+                    ErrorMessage = $"{this._utility.Name} does not exists",
+                    IsErrorSuccess = false,
+                    ChatId = this.Parameters.ChatId,
+                    ReplyParameters = this.Parameters.ReplyParameters
+                });
                 return;
             }
 
             if (VolumeValue < 1 || VolumeValue > 100)
             {
                 // return answer back to caller
-                this.ExecuteContextCallback(
-                    new ExecuteContext()
-                    {
-                        IsErrorSuccess = false,
-                        ErrorMessage = $"Value cannot be {this.VolumeValue}, must be between 1-100"
-                    }
-                );
+                this.ExecuteContextCallback(new TextContext()
+                {
+                    IsErrorSuccess = false,
+                    ErrorMessage = $"Value cannot be {this.VolumeValue}, must be between 1-100",
+                    ChatId = this.Parameters.ChatId,
+                    ReplyParameters = this.Parameters.ReplyParameters
+                });
 
                 // exit
                 return;
@@ -56,10 +59,13 @@ namespace volume
                 .SetVolume(this.VolumeValue)
                 .Execute();
 
-            this.ExecuteContext.IsErrorSuccess = success;
-            this.ExecuteContext.ErrorMessage = $"Volume has been set to value {this.VolumeValue}";
-            this.ExecuteContext.ResultType = ExecuteResultType.Text;
-            this.ExecuteContextCallback(this.ExecuteContext);
+            this.ExecuteContextCallback(new TextContext()
+            {
+                IsErrorSuccess = success,
+                ErrorMessage = $"Volume has been set to value {this.VolumeValue}",
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
+            });
         }
     }
 }

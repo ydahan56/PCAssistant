@@ -19,10 +19,13 @@ namespace pwrcfg
 
         public override void Execute()
         {
-            this.ExecuteContext.ErrorMessage = $"Workstation is preparing to {this.State} within {this.Timeout} seconds..";
-            this.ExecuteContext.IsErrorSuccess = true;
-            this.ExecuteContext.ResultType = ExecuteResultType.Text;
-            this.ExecuteContextCallback(this.ExecuteContext);
+            this.ExecuteContextCallback(new TextContext()
+            {
+                ErrorMessage = $"Workstation is preparing to {this.State} within {this.Timeout} seconds..",
+                IsErrorSuccess = true,
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
+            });
 
             // create default registry
             Registry registry = new Registry();

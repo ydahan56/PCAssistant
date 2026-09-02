@@ -26,10 +26,13 @@ namespace apps
                 text = background.ToString();
             }
 
-            this.ExecuteContext.IsErrorSuccess = true;
-            this.ExecuteContext.ErrorMessage = text;
-            this.ExecuteContext.ResultType = ExecuteResultType.Text;
-            this.ExecuteContextCallback(this.ExecuteContext);
+            this.ExecuteContextCallback(new TextContext()
+            {
+                IsErrorSuccess = true,
+                ErrorMessage = text,
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
+            });
         }
     }
 }

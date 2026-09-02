@@ -65,10 +65,14 @@ namespace lan
 
         private void UpdateAvailable(string update)
         {
-            this.ExecuteContext.ErrorMessage = update;
-            this.ExecuteContext.ResultType = ExecuteResultType.Text;
-            this.ExecuteContext.IsErrorSuccess = true;
-            this.ExecuteContextCallback(this.ExecuteContext);
+          
+            this.ExecuteContextCallback(new TextContext()
+            {
+                ErrorMessage = update,
+                IsErrorSuccess = true,
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
+            });
         }
     }
 }

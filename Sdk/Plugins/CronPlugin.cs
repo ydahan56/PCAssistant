@@ -43,13 +43,11 @@ namespace Sdk.Plugins
             JobManager.RemoveJob(this._nameOfJob);
 
             // update client
-            this.ExecuteContextCallback(
-                new ExecuteContext()
-                {
-                    ErrorMessage = $"{this._nameOfClass} Job with id {this._cronJobId} has been cancelled.",
-                    IsErrorSuccess = true
-                }
-            );
+            this.ExecuteContextCallback(new TextContext()
+            {
+                ErrorMessage = $"{this._nameOfClass} Job with id {this._cronJobId} has been cancelled.",
+                IsErrorSuccess = true
+            });
 
             // reset Job id
             this._cronJobId = 0;

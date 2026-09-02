@@ -33,9 +33,14 @@ namespace dim
                 .SetArgument(this.BrightnessValue)
                 .ExecuteScript();
 
-            this.ExecuteContext.ErrorMessage = result;
-            this.ExecuteContext.IsErrorSuccess = true;
-            this.ExecuteContextCallback(this.ExecuteContext);
+      
+            this.ExecuteContextCallback(new TextContext() 
+            {
+                ErrorMessage = result,
+                IsErrorSuccess = true,
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
+            });
         }
     }
 }

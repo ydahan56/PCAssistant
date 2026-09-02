@@ -40,8 +40,8 @@ namespace msinfo32
                 FileName = Path.GetFileName(filePath),
                 Stream = fs,
                 IsErrorSuccess = true,
-                ChatId = this.ExecuteContext.ChatId,
-                ReplyParameters = this.ExecuteContext.ReplyParameters
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
             };
             this.ExecuteContextCallback(context);
 

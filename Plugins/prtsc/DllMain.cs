@@ -37,8 +37,8 @@ namespace prtsc
                     FileName = fileName,
                     Stream = buffer,
                     IsErrorSuccess = true,
-                    ChatId = this.ExecuteContext.ChatId,
-                    ReplyParameters = this.ExecuteContext.ReplyParameters
+                    ChatId = this.Parameters.ChatId,
+                    ReplyParameters = this.Parameters.ReplyParameters
                 };
                 this.ExecuteContextCallback(context);
             }

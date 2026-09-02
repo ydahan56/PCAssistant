@@ -12,19 +12,24 @@ namespace Sdk.Models
         Task SendPackage(IPCAssistant client);
     }
 
+    public class ExecuteParameters
+    {
+        public ChatId ChatId { get; set; }
+        public ReplyParameters ReplyParameters { get; set; }
+    }
+
     public abstract class ExecuteContext : IExecuteContext
     {
         public bool IsErrorSuccess { get; set; }
         public string ErrorMessage { get; set; }
+
         public ChatId ChatId { get; set; }
         public ReplyParameters ReplyParameters { get; set; }
-
-        public ExecuteResultType ResultType { get; set; }
 
         public abstract Task SendPackage(IPCAssistant client);
     }
 
-    public class StreamContext : ExecuteContext
+    public abstract class StreamContext : ExecuteContext
     {
         public string FileName { get; set; }
         public Stream Stream { get; set; }
@@ -39,7 +44,18 @@ namespace Sdk.Models
     {
         public override async Task SendPackage(IPCAssistant client)
         {
-            await client.SendMessage(this.ChatId, this.ErrorMessage, replyParameters: this.ReplyParameters);
+            if (this.ErrorMessage.Length <= 4096)
+            {
+                await client.SendMessage(this.ChatId, this.ErrorMessage, replyParameters: this.ReplyParameters);
+                return;
+            }
+
+            while (this.ErrorMessage.Length > 4096)
+            {
+                string part = this.ErrorMessage.Substring(0, 4096);
+                await client.SendMessage(this.ChatId, part, replyParameters: this.ReplyParameters);
+                this.ErrorMessage = this.ErrorMessage.Substring(4096);
+            }
         }
     }
 

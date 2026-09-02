@@ -16,15 +16,9 @@ namespace croncap
     {
         private readonly ResourceManager _rm;
 
-        public DllMain() : base(
-            nameof(croncap),
-            nameof(CronCapJob)
-            )
+        public DllMain() : base(nameof(croncap), nameof(CronCapJob))
         {
-            this._rm = new ResourceManager(
-                "croncap.Resource1",
-                Assembly.GetExecutingAssembly()
-            );
+            this._rm = new ResourceManager("croncap.Resource1", Assembly.GetExecutingAssembly());
         }
 
         public override void Execute()
@@ -44,13 +38,13 @@ namespace croncap
             // check if an existing Job is already running
             if (this.IsCronJobActive)
             {
-                this.ExecuteContextCallback(
-                    new ExecuteContext()
-                    {
-                        ErrorMessage = $"{this._nameOfClass} Job with id {this._cronJobId} is already running.",
-                        IsErrorSuccess = true
-                    }
-                );
+                this.ExecuteContextCallback(new TextContext()
+                {
+                    ErrorMessage = $"{this._nameOfClass} Job with id {this._cronJobId} is already running.",
+                    IsErrorSuccess = true,
+                    ChatId = this.Parameters.ChatId,
+                    ReplyParameters = this.Parameters.ReplyParameters
+                });
 
                 return;
             }
@@ -68,15 +62,17 @@ namespace croncap
             // fire Job
             JobManager.Initialize(_cronJob);
 
-            this.ExecuteContext.ErrorMessage = string.Format(
-                this._rm.GetString("SUCCESS_ERRORMESSAGE"),
-                this._cronJobId, this.Total, this.Timeout
-            );
-            this.ExecuteContext.IsErrorSuccess = true;
-            this.ExecuteContextCallback(this.ExecuteContext);
+            this.ExecuteContextCallback(new TextContext() 
+            {
+                ErrorMessage = string.Format(
+                    this._rm.GetString("SUCCESS_ERRORMESSAGE"), this._cronJobId, this.Total, this.Timeout),
+                IsErrorSuccess = true,
+                ChatId = this.Parameters.ChatId,
+                ReplyParameters = this.Parameters.ReplyParameters
+            });
         }
 
-        private StringBuilder updateMessageBuilder = new StringBuilder();
+        private StringBuilder builder = new StringBuilder();
 
         private void OnJobUpdate(UpdateStatus updateStatus, UpdateArgs? args)
         {
@@ -92,7 +88,7 @@ namespace croncap
             if (updateStatus == UpdateStatus.Send)
             {
                 // add finalize text
-                this.updateMessageBuilder.AppendLine("\nFrom *PCAssistant*");
+                this.builder.AppendLine("\nFrom *PCAssistant*");
 
                 // create stream
                 var ms = new MemoryStream();
@@ -107,18 +103,18 @@ namespace croncap
                 var fileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + ".png";
 
                 // update client
-                this.ExecuteContextCallback(
-                    new ImageContext()
-                    {
-                        FileName = fileName,
-                        Stream = ms,
-                        ErrorMessage = this.updateMessageBuilder.ToString(),
-                        IsErrorSuccess = true
-                    }
-                );
+                this.ExecuteContextCallback(new ImageContext()
+                {
+                    FileName = fileName,
+                    Stream = ms,
+                    ErrorMessage = this.builder.ToString(),
+                    IsErrorSuccess = true,
+                    ChatId = this.Parameters.ChatId,
+                    ReplyParameters = this.Parameters.ReplyParameters
+                });
 
                 // clear previous instance
-                this.updateMessageBuilder = new StringBuilder();
+                this.builder = new StringBuilder();
 
                 // exit
                 return;

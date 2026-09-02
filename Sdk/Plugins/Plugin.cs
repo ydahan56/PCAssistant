@@ -20,13 +20,13 @@ namespace Sdk.Plugins
         [Option("seconds", HelpText = "Seconds till command execution.")]
         public int Seconds { get; set; }
 
-        protected ExecuteContext ExecuteContext { get; private set; }
+        protected ExecuteParameters Parameters { get; private set; }
 
         public abstract void Execute();
 
-        public IPlugin SetExecuteContext(ExecuteContext context)
+        public IPlugin SetExecuteContext(ExecuteParameters parameters)
         {
-            this.ExecuteContext = context;
+            this.Parameters = parameters;
             return this;
         }
 

@@ -91,7 +91,7 @@ namespace Agent
                 {
                     // initliaze plugin
                     o.Initialize(new ServiceResolver(Program.IOC))
-                     .SetExecuteContext(new ExecuteContext()
+                     .SetExecuteContext(new ExecuteParameters()
                      {
                          ChatId = new ChatId(update.Message.Chat.Id),
                          ReplyParameters = new ReplyParameters()
